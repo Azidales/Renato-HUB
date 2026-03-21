@@ -1,0 +1,210 @@
+:root {
+    --bg-color: #0f172a;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --card-bg: rgba(30, 41, 59, 0.7);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --card-hover: rgba(30, 41, 59, 1);
+    
+    --grad-1-start: #3b82f6;
+    --grad-1-end: #8b5cf6;
+    --grad-2-start: #10b981;
+    --grad-2-end: #0ea5e9;
+    --grad-title: linear-gradient(135deg, #38bdf8, #818cf8);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Outfit', sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Efeito de brilho de fundo */
+.background-effect {
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 50% 30%, rgba(56, 189, 248, 0.08) 0%, rgba(15, 23, 42, 0) 50%);
+    z-index: -1;
+    pointer-events: none;
+}
+
+.container {
+    width: 100%;
+    max-width: 1000px;
+    padding: 60px 24px;
+    animation: fadeIn 0.8s ease-out forwards;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.greeting-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 99px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    letter-spacing: 0.5px;
+}
+
+.title {
+    font-size: 4rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    letter-spacing: -1px;
+    line-height: 1.1;
+}
+
+.title span {
+    background: var(--grad-title);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.subtitle {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+    max-width: 500px;
+    margin: 0 auto;
+    font-weight: 300;
+    line-height: 1.5;
+}
+
+/* Grid de Apps */
+.apps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+}
+
+.app-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 28px;
+    text-decoration: none;
+    color: var(--text-primary);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    backdrop-filter: blur(12px);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    group: hover;
+}
+
+.app-card:hover {
+    background: var(--card-hover);
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
+    border-color: rgba(255,255,255,0.15);
+}
+
+.app-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    color: white;
+    transition: transform 0.3s ease;
+}
+
+.app-card:hover .app-icon {
+    transform: scale(1.05);
+}
+
+.gradient-1 { background: linear-gradient(135deg, var(--grad-1-start), var(--grad-1-end)); }
+.gradient-2 { background: linear-gradient(135deg, var(--grad-2-start), var(--grad-2-end)); }
+
+.app-info h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.app-info p {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    font-weight: 300;
+}
+
+.card-arrow {
+    position: absolute;
+    top: 32px;
+    right: 28px;
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: all 0.3s ease;
+}
+
+.app-card:hover .card-arrow {
+    opacity: 1;
+    transform: translateX(0);
+    color: white;
+}
+
+/* Cartão tracejado (Adicionar novo) */
+.dashed-card {
+    background: transparent;
+    border: 1.5px dashed var(--card-border);
+    align-items: center;
+    text-align: center;
+}
+
+.dashed-card:hover {
+    background: rgba(255,255,255,0.02);
+    border-color: rgba(255,255,255,0.2);
+}
+
+.add-icon {
+    background: rgba(255,255,255,0.05);
+    color: var(--text-secondary);
+    margin: 0 auto 20px;
+}
+
+.dashed-card:hover .add-icon {
+    background: rgba(255,255,255,0.1);
+    color: white;
+}
+
+.dashed-card .app-info p {
+    margin-top: 8px;
+}
+
+/* Animações */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsividade */
+@media (max-width: 640px) {
+    .title { font-size: 2.5rem; }
+    .apps-grid { grid-template-columns: 1fr; }
+}

@@ -1,15 +1,63 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Renato HUB - Central de Aplicativos">
     <title>Renato HUB</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; padding-top: 50px; background-color: #282c34; color: white; }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Bem-vindo ao Renato HUB!</h1>
-    <p>Projeto inicializado e pronto para GitHub.</p>
+    <div class="background-effect"></div>
+    
+    <main class="container">
+        <header>
+            <div class="greeting-badge" id="greeting">Olá, Renato!</div>
+            <h1 class="title">Seu <span>Espaço</span> Criativo</h1>
+            <p class="subtitle">Bem-vindo ao seu HUB central. Escolha um aplicativo abaixo para iniciar.</p>
+        </header>
+
+        <section class="apps-grid">
+            <!-- App Card 1 -->
+            <a href="#" class="app-card">
+                <div class="app-icon gradient-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                </div>
+                <div class="app-info">
+                    <h2>Meu Primeiro App</h2>
+                    <p>Descrição curta sobre o que este aplicativo de exemplo faz.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+
+            <!-- App Card 2 -->
+            <a href="#" class="app-card">
+                <div class="app-icon gradient-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                </div>
+                <div class="app-info">
+                    <h2>Ferramenta XYZ</h2>
+                    <p>Uma aplicação incrível para resolver problemas diários.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+
+            <!-- App Card 3 -->
+            <a href="#" class="app-card dashed-card">
+                <div class="app-icon add-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </div>
+                <div class="app-info">
+                    <h2>Adicionar Novo App</h2>
+                    <p>Crie uma nova pasta no repositório com um index.html para aparecer aqui.</p>
+                </div>
+            </a>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
 </body>
 </html>
