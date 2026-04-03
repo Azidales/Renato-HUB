@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Poké Catcher - Violet</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
+        .pokeball-card:hover { transform: translateY(-5px); }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-900 pb-24 md:pb-10 min-h-screen">
+    <div class="max-w-4xl mx-auto px-6 pt-10 md:pt-16">
+        
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8">
+            <a href="../index.html" class="p-2 bg-white rounded-xl shadow-sm text-slate-400 hover:text-purple-600 transition">
+                <i data-lucide="arrow-left" class="w-6 h-6"></i>
+            </a>
+            <div class="text-right">
+                <h1 class="text-2xl md:text-3xl font-800 tracking-tighter italic uppercase text-slate-900 leading-none">Poké<span class="text-purple-600">Catcher</span></h1>
+                <p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Geração 9 • Violet</p>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+            
+            <!-- Left Column: Battle Context -->
+            <div class="md:col-span-5 space-y-6">
+                <section class="p-6 bg-white rounded-3xl shadow-lg shadow-purple-900/5 border border-purple-100">
+                    <h2 class="text-sm font-bold uppercase text-slate-400 tracking-widest mb-4 flex items-center gap-2">
+                        <i data-lucide="crosshairs" class="w-4 h-4"></i> Batalha Atual
+                    </h2>
+                    
+                    <!-- Search Pokemon -->
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">Espécie Selvagem</label>
+                        <div class="relative">
+                            <i data-lucide="search" class="w-5 h-5 absolute left-3 top-3 text-slate-300"></i>
+                            <input type="text" id="pokemonInput" placeholder="Ex: Lechonk" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-600 focus:bg-white text-sm font-semibold transition" autocomplete="off">
+                            <div id="searchResults" class="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto hidden"></div>
+                        </div>
+                        <div id="selectedPokemonInfo" class="mt-2 text-xs text-purple-600 font-bold hidden flex items-center gap-1">
+                            <i data-lucide="check-circle" class="w-3 h-3"></i> <span></span>
+                        </div>
+                    </div>
+
+                    <!-- HP -->
+                    <div class="mb-4">
+                        <div class="flex justify-between items-end mb-2">
+                            <label class="block text-xs font-bold text-slate-500 uppercase">HP Restante (%)</label>
+                            <span id="hpValueLabel" class="text-xs font-black text-slate-700">100%</span>
+                        </div>
+                        <input type="range" id="hpSlider" min="1" max="100" value="100" class="w-full accent-purple-600 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <!-- Status Condition -->
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">Condição de Status</label>
+                        <select id="statusSelect" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-600 focus:bg-white text-sm font-semibold transition appearance-none">
+                            <option value="none">Nenhum</option>
+                            <option value="sleep">Dormindo (Sleep)</option>
+                            <option value="freeze">Congelado (Freeze)</option>
+                            <option value="paralyze">Paralisado (Paralyze)</option>
+                            <option value="poison">Envenenado (Poison)</option>
+                            <option value="burn">Queimado (Burn)</option>
+                        </select>
+                    </div>
+
+                    <!-- Environment & Rules -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Turno</label>
+                            <input type="number" id="turnCount" value="1" min="1" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-center appearance-none focus:outline-none focus:ring-2 focus:ring-purple-600">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Período/Local</label>
+                            <select id="timeSelect" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:ring-2 focus:ring-purple-600 appearance-none">
+                                <option value="day">Dia / Externo</option>
+                                <option value="night">Noite / Caverna</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Player Context (Passives) -->
+                <section class="p-6 bg-white rounded-3xl shadow-md border border-slate-100">
+                    <h2 class="text-sm font-bold uppercase text-slate-400 tracking-widest mb-4 flex items-center gap-2">
+                        <i data-lucide="user" class="w-4 h-4"></i> Bônus do Jogador
+                    </h2>
+                    <div class="space-y-3">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" id="catchingCharm" class="w-5 h-5 accent-purple-600 rounded text-purple-600 focus:ring-purple-500 cursor-pointer">
+                            <span class="text-sm font-semibold text-slate-700">Catching Charm Ativo</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" id="registeredPokedex" class="w-5 h-5 accent-purple-600 rounded text-purple-600 focus:ring-purple-500 cursor-pointer">
+                            <span class="text-sm font-semibold text-slate-700">Já Registrado na Pokédex (Crit Catch)</span>
+                        </label>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Column: Results Dashboard -->
+            <div class="md:col-span-7">
+                <section class="h-full flex flex-col">
+                    <h2 class="text-sm font-bold uppercase text-slate-400 tracking-widest mb-4 flex items-center justify-between">
+                        <span class="flex items-center gap-2"><i data-lucide="target" class="w-4 h-4"></i> Recomendações</span>
+                        <span id="baseCatchRateLabel" class="text-[10px] bg-slate-200 text-slate-500 px-2 py-1 rounded-md hidden">Base: --</span>
+                    </h2>
+
+                    <!-- Empty state -->
+                    <div id="emptyState" class="flex-1 min-h-[300px] flex flex-col items-center justify-center p-8 bg-white/50 border-2 border-dashed border-slate-200 rounded-3xl text-center">
+                        <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mb-4">
+                            <i data-lucide="help-circle" class="w-8 h-8"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-600">Aguardando Dados</h3>
+                        <p class="text-xs text-slate-400 font-semibold mt-2 max-w-[200px] mx-auto">Busque um Pokémon acima para calcular as probabilidades.</p>
+                    </div>
+
+                    <!-- Results list -->
+                    <div id="resultsList" class="space-y-3 hidden">
+                        <!-- Items will be injected via JS -->
+                    </div>
+                </section>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Core App Logic -->
+    <script>
+        lucide.createIcons();
+
+        // Application State
+        const appState = {
+            pokemon: null,      // Name & base catch rate
+            pokeTypes: [],      // array of types
+            hpPercent: 100,
+            status: 'none',
+            turn: 1,
+            timeEnvironment: 'day',
+            catchingCharm: false,
+            registeredDex: false
+        };
+
+        // --- DOM Elements ---
+        const ui = {
+            pokemonInput: document.getElementById('pokemonInput'),
+            searchResults: document.getElementById('searchResults'),
+            selectedInfo: document.getElementById('selectedPokemonInfo'),
+            hpSlider: document.getElementById('hpSlider'),
+            hpLabel: document.getElementById('hpValueLabel'),
+            statusSelect: document.getElementById('statusSelect'),
+            turnCount: document.getElementById('turnCount'),
+            timeSelect: document.getElementById('timeSelect'),
+            catchingCharm: document.getElementById('catchingCharm'),
+            registeredDex: document.getElementById('registeredPokedex'),
+            emptyState: document.getElementById('emptyState'),
+            resultsList: document.getElementById('resultsList'),
+            baseCatchRateLabel: document.getElementById('baseCatchRateLabel')
+        };
+
+        // --- Event Listeners ---
+        ui.hpSlider.addEventListener('input', (e) => {
+            appState.hpPercent = parseInt(e.target.value);
+            ui.hpLabel.textContent = appState.hpPercent + '%';
+            calculateRates();
+        });
+
+        ui.statusSelect.addEventListener('change', (e) => { appState.status = e.target.value; calculateRates(); });
+        ui.turnCount.addEventListener('input', (e) => { appState.turn = parseInt(e.target.value) || 1; calculateRates(); });
+        ui.timeSelect.addEventListener('change', (e) => { appState.timeEnvironment = e.target.value; calculateRates(); });
+        ui.catchingCharm.addEventListener('change', (e) => { appState.catchingCharm = e.target.checked; calculateRates(); });
+        ui.registeredDex.addEventListener('change', (e) => { appState.registeredDex = e.target.checked; calculateRates(); });
+
+        // --- POKE API INTEGRATION ---
+        let searchTimeout;
+        ui.pokemonInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            if (query.length < 3) {
+                ui.searchResults.classList.add('hidden');
+                return;
+            }
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                searchPokemon(query);
+            }, 500); // debounce API calls
+        });
+
+        async function searchPokemon(query) {
+            try {
+                // Fetch species which contains capture_rate
+                const res = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${query}`);
+                if (!res.ok) {
+                    // Try listing some if not exact match (we could do graphql but REST is simpler for now)
+                    ui.searchResults.innerHTML = `<div class="p-4 text-xs font-semibold text-slate-500 text-center">Nenhum resultado exato encontrado.</div>`;
+                    ui.searchResults.classList.remove('hidden');
+                    return;
+                }
+                const data = await res.json();
+                
+                // Fetch pokemon endpoint for types (Water/Bug matters for Net Ball)
+                let types = [];
+                try {
+                    const pokemonRes = await fetch(`https://pokeapi.co/api/v2/pokemon/${data.id}`);
+                    if (pokemonRes.ok) {
+                        const pkmnData = await pokemonRes.json();
+                        types = pkmnData.types.map(t => t.type.name);
+                    }
+                } catch(e) {}
+
+                showSearchResult(data.name, data.capture_rate, types);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function showSearchResult(name, captureRate, types) {
+            ui.searchResults.innerHTML = `
+                <div class="p-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center transition" onclick="selectPokemon('${name}', ${captureRate}, '${types.join(',')}')">
+                    <span class="text-sm font-bold capitalize text-slate-800">${name}</span>
+                    <span class="text-[10px] font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded">Taxa: ${captureRate}</span>
+                </div>
+            `;
+            ui.searchResults.classList.remove('hidden');
+        }
+
+        window.selectPokemon = (name, captureRate, typesString) => {
+            appState.pokemon = { name, captureRate };
+            appState.pokeTypes = typesString ? typesString.split(',') : [];
+            
+            ui.pokemonInput.value = name.charAt(0).toUpperCase() + name.slice(1);
+            ui.searchResults.classList.add('hidden');
+            
+            ui.selectedInfo.querySelector('span').textContent = `Base Catch Rate: ${captureRate} | Tipos: ${appState.pokeTypes.join(', ') || 'N/A'}`;
+            ui.selectedInfo.classList.remove('hidden');
+            
+            ui.baseCatchRateLabel.textContent = `Base: ${captureRate}`;
+            ui.baseCatchRateLabel.classList.remove('hidden');
+
+            calculateRates();
+        };
+
+        // UI Click outside search
+        document.addEventListener('click', (e) => {
+            if(!ui.pokemonInput.contains(e.target) && !ui.searchResults.contains(e.target)) {
+                ui.searchResults.classList.add('hidden');
+            }
+        });
+
+        // --- MATH ENGINE (GEN 9) ---
+        // Simplified approach assuming the Wild Level <= Player Level (no massive penalities)
+        function calculateRates() {
+            if (!appState.pokemon) return;
+
+            ui.emptyState.classList.add('hidden');
+            ui.resultsList.classList.remove('hidden');
+
+            const C = appState.pokemon.captureRate;
+            const hpFrac = appState.hpPercent / 100;
+            // (3M - 2H) / 3M => when H=1M (100%), (3-2)/3 = 1/3 = 0.33. When H~0 (1%), (3-0.02)/3 = ~0.99
+            const hpMultiplier = (3 - (2 * hpFrac)) / 3;
+
+            let statusModifier = 1;
+            if (appState.status === 'sleep' || appState.status === 'freeze') statusModifier = 2.5;
+            else if (['paralyze', 'poison', 'burn'].includes(appState.status)) statusModifier = 1.5;
+
+            // Catching Charm Gen 9 (assuming SV standard modifier) usually gives an extra roll for critical catch, 
+            // but we'll reflect it generally as a slight flat increase or the exact math if we simplified.
+            // Critical Capture rate calculation: 
+            let catchCharmMultiplier = appState.catchingCharm ? 1.1 : 1.0; // Approximation for direct catch rate increase.
+
+            // Available Balls and their dynamic modifiers in Gen 9
+            const balls = [
+                { name: 'Poké Ball', id: 'poke', color: 'bg-red-50 text-red-600', border:'border-red-100', bg:'bg-red-600', modifier: 1 },
+                { name: 'Great Ball', id: 'great', color: 'bg-blue-50 text-blue-600', border:'border-blue-100', bg:'bg-blue-600', modifier: 1.5 },
+                { name: 'Ultra Ball', id: 'ultra', color: 'bg-yellow-50 text-yellow-600', border:'border-yellow-200', bg:'bg-amber-500', modifier: 2.0 },
+                { name: 'Quick Ball', id: 'quick', color: 'bg-cyan-50 text-cyan-600', border:'border-cyan-100', bg:'bg-cyan-500', modifier: appState.turn === 1 ? 5.0 : 1.0 },
+                { name: 'Dusk Ball', id: 'dusk', color: 'bg-green-50 text-green-700', border:'border-green-200', bg:'bg-green-700', modifier: appState.timeEnvironment === 'night' ? 3.0 : 1.0 },
+                { name: 'Timer Ball', id: 'timer', color: 'bg-orange-50 text-orange-600', border:'border-orange-100', bg:'bg-orange-500', modifier: Math.min(1 + (appState.turn * 0.3), 4.0) },
+                { name: 'Net Ball', id: 'net', color: 'bg-sky-50 text-sky-600', border:'border-sky-100', bg:'bg-sky-600', modifier: (appState.pokeTypes.includes('water') || appState.pokeTypes.includes('bug')) ? 3.5 : 1.0 },
+                { name: 'Repeat Ball', id: 'repeat', color: 'bg-rose-50 text-rose-600', border:'border-rose-100', bg:'bg-rose-500', modifier: appState.registeredDex ? 3.5 : 1.0 }
+            ];
+
+            // Evaluate each ball
+            const results = balls.map(ball => {
+                // Base Catch Value 'a'
+                // SV Max value is 255.
+                let a = (hpMultiplier * C * ball.modifier * statusModifier) * catchCharmMultiplier;
+                
+                // Shake probability calculation
+                // b = 65536 * (a / 255)^0.25 (Original formula).
+                // Probability of 4 shakes (Catch!) = (b / 65535)^4
+                let catchProbability = 0;
+                
+                if (a >= 255) {
+                    catchProbability = 100;
+                } else {
+                    const b = 65536 * Math.pow(a / 255, 0.25);
+                    const p = Math.pow(b / 65535, 4);
+                    catchProbability = Math.min(100, Math.max(0, p * 100));
+                }
+
+                // If Critical Capture is a factor:
+                if (appState.registeredDex) {
+                    // Having the pokedex gives a flat boost to critical capture chance
+                    // Critical capture only needs 1 shake. Not implementing full complex crit formula, but boosting visually.
+                    // catchProbability += (100 - catchProbability) * 0.1; // ~10% relatively higher due to crit catch
+                }
+
+                return { ...ball, prob: catchProbability };
+            });
+
+            // Sort by highest probability
+            results.sort((x, y) => y.prob - x.prob);
+
+            renderResults(results);
+        }
+
+        function renderResults(results) {
+            ui.resultsList.innerHTML = '';
+            
+            results.forEach((r, idx) => {
+                const isTop = idx === 0; // The absolute best option
+                
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-2xl flex items-center justify-between border transition-all duration-300 pokeball-card bg-white shadow-sm ${r.border}`;
+                if (isTop) {
+                    card.classList.add('shadow-md', 'shadow-purple-100');
+                    card.style.transform = 'scale(1.02)';
+                }
+
+                card.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full ${r.color} flex items-center justify-center font-black ${isTop ? 'border-2 border-inherit ring-4 ring-white shadow-inner' : ''}">
+                           B 
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                ${r.name} 
+                                ${isTop ? '<span class="text-[9px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full uppercase tracking-wider font-black">Recomendada</span>' : ''}
+                            </h3>
+                            <p class="text-[10px] uppercase font-bold text-slate-400 mt-1 tracking-wider">Modificador: ${r.modifier.toFixed(1)}x</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-2xl font-black ${getProbColor(r.prob)}">${r.prob.toFixed(1)}%</div>
+                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Chance</p>
+                    </div>
+                `;
+                ui.resultsList.appendChild(card);
+            });
+        }
+
+        function getProbColor(prob) {
+            if (prob >= 80) return 'text-emerald-500';
+            if (prob >= 50) return 'text-amber-500';
+            if (prob >= 25) return 'text-orange-500';
+            return 'text-red-500';
+        }
+    </script>
+</body>
+</html>
