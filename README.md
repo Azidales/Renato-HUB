@@ -22,15 +22,19 @@ Dashboard pessoal unificado para centralizar ferramentas acadêmicas e utilitár
 
 ```
 Renato HUB/
-├── index.html              — Hub Central
-├── academic-flow/
-│   └── index.html          — Academic Flow
-├── projetos/
-│   └── index.html          — Task Flow
-└── pokemon-catcher/
-    └── index.html          — Poké Catcher
+├── index.html              — Hub Central (landing page)
+├── academic-flow.html      — Academic Flow
+├── task-flow.html          — Task Flow
+├── pokemon-catcher.html    — Poké Catcher
+├── AGENTS.md               — Documentação de referência para agentes AI
+└── README.md               — Este arquivo
 ```
+
+## 🤖 Para Agentes AI
+
+Leia o arquivo `AGENTS.md` antes de fazer qualquer alteração neste projeto.
 
 ## 🚀 Como Rodar
 
-Basta abrir `index.html` no navegador ou acessar via GitHub Pages.
+Basta abrir `index.html` no navegador ou acessar via GitHub Pages:  
+🔗 **https://azidales.github.io/Renato-HUB/**
