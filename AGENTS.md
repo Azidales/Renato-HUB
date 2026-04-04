@@ -94,23 +94,28 @@ Glass variant: `background: rgba(255,255,255,0.8); backdrop-filter: blur(12px); 
 
 ### 4.5 Header Pattern (every app page)
 ```html
-<!-- Back button (all apps except hub) -->
-<a href="index.html" class="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-{BRAND_COLOR} transition">
-    <i data-lucide="arrow-left" class="w-3 h-3"></i> Voltar ao Hub Central
-</a>
-
-<!-- Title block -->
-<h1 class="text-2xl md:text-4xl font-800 tracking-tighter italic uppercase text-slate-900 leading-none">
-    AppName<span class="text-{BRAND_COLOR}">SecondWord</span>
-</h1>
-<p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">
-    Subtítulo • Renato
-</p>
-
-<!-- Avatar circle (top right) -->
-<div class="h-10 w-10 rounded-full bg-{BRAND_COLOR} flex items-center justify-center text-white shadow-lg">
-    <i data-lucide="{ICON}" class="w-5 h-5"></i>
-</div>
+<header class="flex justify-between items-center mb-8 md:mb-12">
+    <div class="flex items-center gap-4">
+        <!-- Back button (all apps except hub) -->
+        <a href="index.html" class="p-2 bg-white rounded-xl shadow-sm border border-slate-100 text-slate-400 hover:text-{BRAND_COLOR} transition shrink-0">
+            <i data-lucide="arrow-left" class="w-6 h-6"></i>
+        </a>
+        <!-- Title block -->
+        <div>
+            <h1 class="text-2xl md:text-4xl font-800 tracking-tighter italic uppercase text-slate-900 leading-none">
+                App<span class="text-{BRAND_COLOR}">Name</span>
+            </h1>
+            <p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
+                Subtítulo • Renato
+            </p>
+        </div>
+    </div>
+    
+    <!-- User Avatar or Action Buttons (Right side - optional) -->
+    <div class="h-10 w-10 rounded-full bg-{BRAND_COLOR} flex items-center justify-center text-white shadow-lg shrink-0">
+        <i data-lucide="{ICON}" class="w-5 h-5"></i>
+    </div>
+</header>
 ```
 
 ### 4.6 Loading Screen (Firebase apps only)
