@@ -49,9 +49,12 @@
                 </div>
             </div>
             
-            <div id="selectedPokemonInfo" class="hidden flex-col justify-center bg-purple-50 px-6 py-3 rounded-xl border border-purple-100">
-                <span class="text-xs uppercase font-black tracking-widest text-purple-600 mb-1 flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3"></i> Selecionado</span>
-                <span id="selectedPokemonMeta" class="text-sm font-bold text-slate-700"></span>
+            <div id="selectedPokemonInfo" class="hidden items-center gap-4 bg-purple-50 px-5 py-2 rounded-xl border border-purple-100">
+                <img id="selectedPokemonSprite" src="" alt="Sprite" class="w-12 h-12 shrink-0 drop-shadow-sm" style="image-rendering: pixelated;">
+                <div class="flex flex-col justify-center">
+                    <span class="text-[10px] uppercase font-black tracking-widest text-purple-600 mb-0.5 flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3"></i> Selecionado</span>
+                    <span id="selectedPokemonMeta" class="text-sm font-bold text-slate-700"></span>
+                </div>
             </div>
         </section>
 
@@ -191,9 +194,10 @@
                             <i data-lucide="shield" class="w-4 h-4"></i> Defesa Base (Tera)
                         </h2>
                         
-                        <div id="strategyPokemonOverview" class="mb-6 p-4 rounded-xl border border-slate-100 bg-slate-50 text-center hidden">
-                            <h3 class="text-lg font-black uppercase text-slate-800" id="strategyPokeName">...</h3>
-                            <div class="flex items-center justify-center gap-2 mt-2" id="strategyPokeTypes"></div>
+                        <div id="strategyPokemonOverview" class="mb-6 p-4 rounded-xl border border-slate-100 bg-slate-50 flex flex-col items-center text-center hidden relative overflow-hidden">
+                            <img id="strategyPanelSprite" src="" class="absolute -right-4 top-1/2 -translate-y-1/2 w-24 h-24 opacity-10 pointer-events-none scale-150" style="image-rendering: pixelated;">
+                            <h3 class="text-lg font-black uppercase text-slate-800 relative z-10" id="strategyPokeName">...</h3>
+                            <div class="flex items-center justify-center gap-2 mt-2 relative z-10" id="strategyPokeTypes"></div>
                         </div>
 
                         <div class="mb-4 pt-4 border-t border-slate-100">
@@ -370,20 +374,25 @@
                 const speciesData = await speciesRes.json();
                 
                 let types = [];
+                let sprite = '';
                 try {
                     const pkmnRes = await fetch(`https://pokeapi.co/api/v2/pokemon/${speciesData.id}`);
                     if (pkmnRes.ok) {
                         const pkmnData = await pkmnRes.json();
                         types = pkmnData.types.map(t => t.type.name);
+                        
+                        // Gets Gen 8 style icon or fallback to default
+                        sprite = pkmnData.sprites.versions?.['generation-viii']?.icons?.front_default || pkmnData.sprites.front_default;
                     }
                 } catch(e) {
-                    console.warn('[PokemonAPI] Aviso: Tipos de combate indisponíveis.', e);
+                    console.warn('[PokemonAPI] Aviso: Detalhes extras indisponíveis.', e);
                 }
                 
                 const details = { 
                     name: speciesData.name, 
                     captureRate: speciesData.capture_rate, 
-                    types 
+                    types,
+                    sprite
                 };
                 
                 this.cache[name] = details;
@@ -532,6 +541,7 @@
                     
                     // Strategy Layout
                     strategyPokemonOverview: document.getElementById('strategyPokemonOverview'),
+                    strategyPanelSprite: document.getElementById('strategyPanelSprite'),
                     strategyPokeName: document.getElementById('strategyPokeName'),
                     strategyPokeTypes: document.getElementById('strategyPokeTypes'),
                     teraActive: document.getElementById('teraActive'),
@@ -677,12 +687,13 @@
                 try {
                     const details = await this.api.fetchDetails(name);
                     
-                    state.pokemon = { name: details.name, captureRate: details.captureRate };
+                    state.pokemon = { name: details.name, captureRate: details.captureRate, sprite: details.sprite };
                     state.pokeTypes = details.types;
                     
                     this.ui.pokemonInput.value = name.charAt(0).toUpperCase() + name.slice(1);
                     
-                    document.getElementById('selectedPokemonMeta').textContent = `Base Catch Rate: ${details.captureRate} • Tipos: ${state.pokeTypes.join(', ') || 'N/A'}`;
+                    document.getElementById('selectedPokemonSprite').src = details.sprite;
+                    document.getElementById('selectedPokemonMeta').textContent = `Base Catch: ${details.captureRate} • Tipos: ${state.pokeTypes.join(', ') || 'N/A'}`;
                     this.ui.selectedInfo.style.display = 'flex';
                     this.ui.selectedInfo.classList.remove('hidden');
                     
@@ -708,6 +719,7 @@
                 this.ui.strategyMatrix.classList.remove('hidden');
                 this.ui.strategyPokemonOverview.classList.remove('hidden');
                 this.ui.strategyPokeName.textContent = state.pokemon.name;
+                this.ui.strategyPanelSprite.src = state.pokemon.sprite;
                 
                 const activeTypes = state.teraActive ? [state.teraType] : state.pokeTypes;
                 
@@ -720,14 +732,14 @@
             renderStrategy(matchup) {
                 const buildSection = (title, items, isDanger) => {
                     if (items.length === 0) return '';
-                    const chips = items.map(t => `<div class="px-4 py-2 flex items-center justify-between rounded-xl shadow-sm ${isDanger ? 'bg-red-50/50 border border-red-100' : 'bg-slate-50 border border-slate-100'}">
-                        <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase text-white shadow-sm ${TYPE_COLORS[t.type] || 'bg-slate-400'}">${POKE_TYPES_PT[t.type] || t.type}</span>
-                        <span class="text-sm font-black ${isDanger ? 'text-red-600' : 'text-slate-600'}">${t.val}x</span>
+                    const chips = items.map(t => `<div class="px-3 py-2 flex items-center justify-between gap-1.5 rounded-xl shadow-[0_2px_4px_-2px_rgba(0,0,0,0.05)] border ${isDanger ? 'bg-red-50/70 border-red-100 hover:bg-red-50 hover:shadow-md' : 'bg-slate-50 border-slate-200 hover:bg-slate-100 hover:shadow-md'} transition-all group overflow-hidden">
+                        <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase text-white shadow-sm shrink-0 truncate ${TYPE_COLORS[t.type] || 'bg-slate-400'}">${POKE_TYPES_PT[t.type] || t.type}</span>
+                        <span class="text-xs font-black shrink-0 ${isDanger ? 'text-red-600 group-hover:text-red-700' : 'text-slate-600 group-hover:text-slate-900'}">${t.val}x</span>
                     </div>`).join('');
                     
-                    return `<div>
-                        <h4 class="text-[10px] uppercase font-bold tracking-widest text-slate-400 mb-3">${title}</h4>
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">${chips}</div>
+                    return `<div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+                        <h4 class="text-[10px] uppercase font-bold tracking-widest text-slate-400 mb-4 border-b border-slate-50 pb-2">${title}</h4>
+                        <div class="grid grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3">${chips}</div>
                     </div>`;
                 };
 
