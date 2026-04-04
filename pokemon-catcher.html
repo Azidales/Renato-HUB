@@ -337,11 +337,6 @@
             if (appState.status === 'sleep' || appState.status === 'freeze') statusModifier = 2.5;
             else if (['paralyze', 'poison', 'burn'].includes(appState.status)) statusModifier = 1.5;
 
-            // Catching Charm Gen 9 (assuming SV standard modifier) usually gives an extra roll for critical catch, 
-            // but we'll reflect it generally as a slight flat increase or the exact math if we simplified.
-            // Critical Capture rate calculation: 
-            let catchCharmMultiplier = appState.catchingCharm ? 1.1 : 1.0; // Approximation for direct catch rate increase.
-
             // Available Balls and their dynamic modifiers in Gen 9
             const balls = [
                 { name: 'Poké Ball', id: 'poke', color: 'bg-red-50 text-red-600', border:'border-red-100', bg:'bg-red-600', modifier: 1 },
@@ -358,26 +353,29 @@
             const results = balls.map(ball => {
                 // Base Catch Value 'a'
                 // SV Max value is 255.
-                let a = (hpMultiplier * C * ball.modifier * statusModifier * badgePenalty * lowLevelModifier) * catchCharmMultiplier;
+                let a = hpMultiplier * C * ball.modifier * statusModifier * badgePenalty * lowLevelModifier;
                 
-                // Shake probability calculation
-                // b = 65536 * (a / 255)^0.25 (Original formula).
-                // Probability of 4 shakes (Catch!) = (b / 65535)^4
                 let catchProbability = 0;
                 
                 if (a >= 255) {
                     catchProbability = 100;
                 } else {
+                    // Shake probability (b = 65536 * (a/255)^0.25)
                     const b = 65536 * Math.pow(a / 255, 0.25);
-                    const p = Math.pow(b / 65535, 4);
-                    catchProbability = Math.min(100, Math.max(0, p * 100));
-                }
+                    const pShake = b / 65536; // Chance to pass a single shake
+                    
+                    // Critical Catch calculation (c = (a * DexModifier * CharmModifier) / 6)
+                    let dexModifier = appState.registeredDex ? 2.0 : 0; 
+                    let charmModifier = appState.catchingCharm ? 2.0 : 1.0;
+                    
+                    let c = Math.floor((a * dexModifier * charmModifier) / 6);
+                    let pCrit = Math.min(1, Math.max(0, c / 256));
+                    
+                    // Final probability calculation:
+                    // Se Critar: precisa de 1 shake. Se não Critar: precisa de 4 shakes.
+                    let pCatch = (pCrit * pShake) + ((1 - pCrit) * Math.pow(pShake, 4));
 
-                // If Critical Capture is a factor:
-                if (appState.registeredDex) {
-                    // Having the pokedex gives a flat boost to critical capture chance
-                    // Critical capture only needs 1 shake. Not implementing full complex crit formula, but boosting visually.
-                    // catchProbability += (100 - catchProbability) * 0.1; // ~10% relatively higher due to crit catch
+                    catchProbability = Math.min(100, Math.max(0, pCatch * 100));
                 }
 
                 return { ...ball, prob: catchProbability };
