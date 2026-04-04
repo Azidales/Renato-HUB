@@ -74,6 +74,28 @@
                         </select>
                     </div>
 
+                    <!-- Level & Badges -->
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Nível Selvagem</label>
+                            <input type="number" id="pokemonLevel" value="20" min="1" max="100" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-center appearance-none focus:outline-none focus:ring-2 focus:ring-purple-600">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Suas Insígnias</label>
+                            <select id="badgesCount" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:ring-2 focus:ring-purple-600 appearance-none text-center">
+                                <option value="0">0 Insígnias (Obedece ≤20)</option>
+                                <option value="1">1 Insígnia (Obedece ≤25)</option>
+                                <option value="2">2 Insígnias (Obedece ≤30)</option>
+                                <option value="3">3 Insígnias (Obedece ≤35)</option>
+                                <option value="4">4 Insígnias (Obedece ≤40)</option>
+                                <option value="5">5 Insígnias (Obedece ≤45)</option>
+                                <option value="6">6 Insígnias (Obedece ≤50)</option>
+                                <option value="7">7 Insígnias (Obedece ≤55)</option>
+                                <option value="8" selected>8 Insígnias (Obedece todos)</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <!-- Environment & Rules -->
                     <div class="grid grid-cols-2 gap-3">
                         <div>
@@ -145,6 +167,8 @@
             pokeTypes: [],      // array of types
             hpPercent: 100,
             status: 'none',
+            pokemonLevel: 20,
+            badges: 8,
             turn: 1,
             timeEnvironment: 'day',
             catchingCharm: false,
@@ -159,6 +183,8 @@
             hpSlider: document.getElementById('hpSlider'),
             hpLabel: document.getElementById('hpValueLabel'),
             statusSelect: document.getElementById('statusSelect'),
+            pokemonLevel: document.getElementById('pokemonLevel'),
+            badgesCount: document.getElementById('badgesCount'),
             turnCount: document.getElementById('turnCount'),
             timeSelect: document.getElementById('timeSelect'),
             catchingCharm: document.getElementById('catchingCharm'),
@@ -176,6 +202,8 @@
         });
 
         ui.statusSelect.addEventListener('change', (e) => { appState.status = e.target.value; calculateRates(); });
+        ui.pokemonLevel.addEventListener('input', (e) => { appState.pokemonLevel = parseInt(e.target.value) || 1; calculateRates(); });
+        ui.badgesCount.addEventListener('change', (e) => { appState.badges = parseInt(e.target.value) || 0; calculateRates(); });
         ui.turnCount.addEventListener('input', (e) => { appState.turn = parseInt(e.target.value) || 1; calculateRates(); });
         ui.timeSelect.addEventListener('change', (e) => { appState.timeEnvironment = e.target.value; calculateRates(); });
         ui.catchingCharm.addEventListener('change', (e) => { appState.catchingCharm = e.target.checked; calculateRates(); });
@@ -285,6 +313,13 @@
             // (3M - 2H) / 3M => when H=1M (100%), (3-2)/3 = 1/3 = 0.33. When H~0 (1%), (3-0.02)/3 = ~0.99
             const hpMultiplier = (3 - (2 * hpFrac)) / 3;
 
+            const obedienceLevels = [20, 25, 30, 35, 40, 45, 50, 55, 100];
+            const obedience = obedienceLevels[appState.badges];
+            let badgePenalty = 1.0;
+            if (appState.pokemonLevel > obedience) {
+                badgePenalty = 0.8 * (obedience / appState.pokemonLevel);
+            }
+
             let statusModifier = 1;
             if (appState.status === 'sleep' || appState.status === 'freeze') statusModifier = 2.5;
             else if (['paralyze', 'poison', 'burn'].includes(appState.status)) statusModifier = 1.5;
@@ -310,7 +345,7 @@
             const results = balls.map(ball => {
                 // Base Catch Value 'a'
                 // SV Max value is 255.
-                let a = (hpMultiplier * C * ball.modifier * statusModifier) * catchCharmMultiplier;
+                let a = (hpMultiplier * C * ball.modifier * statusModifier * badgePenalty) * catchCharmMultiplier;
                 
                 // Shake probability calculation
                 // b = 65536 * (a / 255)^0.25 (Original formula).
