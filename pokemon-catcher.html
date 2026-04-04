@@ -161,284 +161,338 @@
     <script>
         lucide.createIcons();
 
-        // Application State
-        const appState = {
-            pokemon: null,      // Name & base catch rate
-            pokeTypes: [],      // array of types
+        // ==========================================
+        // 1. CONSTANTS & CONFIGURATION
+        // ==========================================
+        const SV_CONSTANTS = {
+            MAX_CATCH_VALUE: 255,
+            BASE_SHAKE_PROB: 65536,
+            CRIT_DENOMINATOR: 6,
+            CRIT_MAX_PROB: 256,
+            SHAKE_CHECKS: 4,
+            OBEDIENCE_LEVELS: [20, 25, 30, 35, 40, 45, 50, 55, 100],
+            PENALTY_MULTIPLIER: 0.8
+        };
+
+        // ==========================================
+        // 2. STATE MANAGEMENT (MODEL)
+        // ==========================================
+        const state = {
+            pokemon: null,      // { name, captureRate }
+            pokeTypes: [],
             hpPercent: 100,
             status: 'none',
             pokemonLevel: 20,
-            badges: 8,
+            playerBadges: 8,
             turn: 1,
             timeEnvironment: 'day',
             catchingCharm: false,
             registeredDex: false
         };
 
-        // --- DOM Elements ---
-        const ui = {
-            pokemonInput: document.getElementById('pokemonInput'),
-            searchResults: document.getElementById('searchResults'),
-            selectedInfo: document.getElementById('selectedPokemonInfo'),
-            hpSlider: document.getElementById('hpSlider'),
-            hpLabel: document.getElementById('hpValueLabel'),
-            statusSelect: document.getElementById('statusSelect'),
-            pokemonLevel: document.getElementById('pokemonLevel'),
-            badgesCount: document.getElementById('badgesCount'),
-            turnCount: document.getElementById('turnCount'),
-            timeSelect: document.getElementById('timeSelect'),
-            catchingCharm: document.getElementById('catchingCharm'),
-            registeredDex: document.getElementById('registeredPokedex'),
-            emptyState: document.getElementById('emptyState'),
-            resultsList: document.getElementById('resultsList'),
-            baseCatchRateLabel: document.getElementById('baseCatchRateLabel')
-        };
+        // ==========================================
+        // 3. POKEMON SERVICE (INFRASTRUCTURE LAYER)
+        // ==========================================
+        class PokemonAPI {
+            constructor() {
+                this.cache = {};
+                this.speciesList = [];
+            }
 
-        // --- Event Listeners ---
-        ui.hpSlider.addEventListener('input', (e) => {
-            appState.hpPercent = parseInt(e.target.value);
-            ui.hpLabel.textContent = appState.hpPercent + '%';
-            calculateRates();
-        });
-
-        ui.statusSelect.addEventListener('change', (e) => { appState.status = e.target.value; calculateRates(); });
-        ui.pokemonLevel.addEventListener('input', (e) => { appState.pokemonLevel = Math.max(1, Math.min(100, parseInt(e.target.value) || 1)); calculateRates(); });
-        ui.badgesCount.addEventListener('change', (e) => { appState.badges = parseInt(e.target.value) || 0; calculateRates(); });
-        ui.turnCount.addEventListener('input', (e) => { appState.turn = Math.max(1, parseInt(e.target.value) || 1); calculateRates(); });
-        ui.timeSelect.addEventListener('change', (e) => { appState.timeEnvironment = e.target.value; calculateRates(); });
-        ui.catchingCharm.addEventListener('change', (e) => { appState.catchingCharm = e.target.checked; calculateRates(); });
-        ui.registeredDex.addEventListener('change', (e) => { appState.registeredDex = e.target.checked; calculateRates(); });
-
-        // --- POKE API INTEGRATION ---
-        let allPokemonCache = [];
-        
-        // Cache all names on load for instant fuzzy search
-        async function loadPokemonNames() {
-            try {
-                const res = await fetch('https://pokeapi.co/api/v2/pokemon-species?limit=1500');
-                if (res.ok) {
+            async preloadSpecies() {
+                try {
+                    const res = await fetch('https://pokeapi.co/api/v2/pokemon-species?limit=1500');
+                    if (!res.ok) throw new Error('API Indisponível');
                     const data = await res.json();
-                    allPokemonCache = data.results.map(p => p.name);
+                    this.speciesList = data.results.map(p => p.name);
+                } catch (err) {
+                    console.error('[PokemonAPI] Falha ao pre-carregar lista de espécies:', err);
                 }
-            } catch (err) { console.error(err); }
-        }
-        loadPokemonNames();
-
-        ui.pokemonInput.addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase().trim();
-            if (query.length < 2) {
-                ui.searchResults.classList.add('hidden');
-                return;
-            }
-            
-            // Fuzzy search locally
-            const matches = allPokemonCache.filter(name => name.includes(query)).slice(0, 8);
-            
-            if (matches.length === 0) {
-                ui.searchResults.innerHTML = `<div class="p-4 text-xs font-semibold text-slate-500 text-center">Nenhum pokemon encontrado.</div>`;
-                ui.searchResults.classList.remove('hidden');
-                return;
             }
 
-            // Build list
-            ui.searchResults.innerHTML = matches.map(name => `
-                <div class="p-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center transition" onclick="fetchAndSelect('${name}')">
-                    <span class="text-sm font-bold capitalize text-slate-800">${name}</span>
-                    <i data-lucide="download" class="w-4 h-4 text-slate-300"></i>
-                </div>
-            `).join('');
-            
-            lucide.createIcons();
-            ui.searchResults.classList.remove('hidden');
-        });
-
-        const pokemonDetailsCache = {}; // Cache to avoid redundant API calls
-        
-        window.fetchAndSelect = async (name) => {
-            if (pokemonDetailsCache[name]) {
-                const data = pokemonDetailsCache[name];
-                selectPokemon(data.name, data.captureRate, data.typesString);
-                return;
+            fuzzySearch(query) {
+                if (!query || query.length < 2) return [];
+                return this.speciesList.filter(name => name.includes(query)).slice(0, 8);
             }
 
-            ui.pokemonInput.value = "Carregando dados...";
-            ui.searchResults.classList.add('hidden');
-            
-            try {
-                const res = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${name}`);
-                if (!res.ok) throw new Error("Not found");
-                const data = await res.json();
+            async fetchDetails(name) {
+                if (this.cache[name]) return this.cache[name];
+                
+                const speciesRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${name}`);
+                if (!speciesRes.ok) throw new Error("Espécie não encontrada na API");
+                const speciesData = await speciesRes.json();
                 
                 let types = [];
                 try {
-                    const pokemonRes = await fetch(`https://pokeapi.co/api/v2/pokemon/${data.id}`);
-                    if (pokemonRes.ok) {
-                        const pkmnData = await pokemonRes.json();
+                    const pkmnRes = await fetch(`https://pokeapi.co/api/v2/pokemon/${speciesData.id}`);
+                    if (pkmnRes.ok) {
+                        const pkmnData = await pkmnRes.json();
                         types = pkmnData.types.map(t => t.type.name);
                     }
-                } catch(e) {}
-                
-                const typesString = types.join(',');
-                pokemonDetailsCache[name] = { name: data.name, captureRate: data.capture_rate, typesString };
-                
-                selectPokemon(data.name, data.capture_rate, typesString);
-            } catch (err) {
-                console.error(err);
-                ui.pokemonInput.value = "Erro ao carregar";
-            }
-        };
-
-        window.selectPokemon = (name, captureRate, typesString) => {
-            appState.pokemon = { name, captureRate };
-            appState.pokeTypes = typesString ? typesString.split(',') : [];
-            
-            ui.pokemonInput.value = name.charAt(0).toUpperCase() + name.slice(1);
-            ui.searchResults.classList.add('hidden');
-            
-            ui.selectedInfo.querySelector('span').textContent = `Base Catch Rate: ${captureRate} | Tipos: ${appState.pokeTypes.join(', ') || 'N/A'}`;
-            ui.selectedInfo.classList.remove('hidden');
-            
-            ui.baseCatchRateLabel.textContent = `Base: ${captureRate}`;
-            ui.baseCatchRateLabel.classList.remove('hidden');
-
-            calculateRates();
-        };
-
-        // UI Click outside search
-        document.addEventListener('click', (e) => {
-            if(!ui.pokemonInput.contains(e.target) && !ui.searchResults.contains(e.target)) {
-                ui.searchResults.classList.add('hidden');
-            }
-        });
-
-        // --- MATH ENGINE (GEN 9) ---
-        // Simplified approach assuming the Wild Level <= Player Level (no massive penalities)
-        function calculateRates() {
-            if (!appState.pokemon) return;
-
-            ui.emptyState.classList.add('hidden');
-            ui.resultsList.classList.remove('hidden');
-
-            const C = appState.pokemon.captureRate;
-            const hpFrac = appState.hpPercent / 100;
-            // (3M - 2H) / 3M => when H=1M (100%), (3-2)/3 = 1/3 = 0.33. When H~0 (1%), (3-0.02)/3 = ~0.99
-            const hpMultiplier = (3 - (2 * hpFrac)) / 3;
-
-            const obedienceLevels = [20, 25, 30, 35, 40, 45, 50, 55, 100];
-            let requiredBadges = 0;
-            for (let i = 0; i < obedienceLevels.length; i++) {
-                if (appState.pokemonLevel <= obedienceLevels[i]) {
-                    requiredBadges = i;
-                    break;
+                } catch(e) {
+                    console.warn('[PokemonAPI] Aviso: Tipos de combate indisponíveis.', e);
                 }
-            }
-            
-            let badgePenalty = 1.0;
-            if (appState.badges < requiredBadges) {
-                const missingBadges = requiredBadges - appState.badges;
-                badgePenalty = Math.pow(0.8, missingBadges);
-            }
-
-            let lowLevelModifier = 1.0;
-            if (appState.pokemonLevel <= 13) {
-                lowLevelModifier = (36 - 2 * appState.pokemonLevel) / 10;
-            }
-
-            let statusModifier = 1;
-            if (appState.status === 'sleep' || appState.status === 'freeze') statusModifier = 2.5;
-            else if (['paralyze', 'poison', 'burn'].includes(appState.status)) statusModifier = 1.5;
-
-            // Available Balls and their dynamic modifiers in Gen 9
-            const balls = [
-                { name: 'Poké Ball', id: 'poke', color: 'bg-red-50 text-red-600', border:'border-red-100', bg:'bg-red-600', modifier: 1 },
-                { name: 'Great Ball', id: 'great', color: 'bg-blue-50 text-blue-600', border:'border-blue-100', bg:'bg-blue-600', modifier: 1.5 },
-                { name: 'Ultra Ball', id: 'ultra', color: 'bg-yellow-50 text-yellow-600', border:'border-yellow-200', bg:'bg-amber-500', modifier: 2.0 },
-                { name: 'Quick Ball', id: 'quick', color: 'bg-cyan-50 text-cyan-600', border:'border-cyan-100', bg:'bg-cyan-500', modifier: appState.turn === 1 ? 5.0 : 1.0 },
-                { name: 'Dusk Ball', id: 'dusk', color: 'bg-green-50 text-green-700', border:'border-green-200', bg:'bg-green-700', modifier: appState.timeEnvironment === 'night' ? 3.0 : 1.0 },
-                { name: 'Timer Ball', id: 'timer', color: 'bg-orange-50 text-orange-600', border:'border-orange-100', bg:'bg-orange-500', modifier: Math.min(1 + ((appState.turn - 1) * 0.3), 4.0) },
-                { name: 'Net Ball', id: 'net', color: 'bg-sky-50 text-sky-600', border:'border-sky-100', bg:'bg-sky-600', modifier: (appState.pokeTypes.includes('water') || appState.pokeTypes.includes('bug')) ? 3.5 : 1.0 },
-                { name: 'Repeat Ball', id: 'repeat', color: 'bg-rose-50 text-rose-600', border:'border-rose-100', bg:'bg-rose-500', modifier: appState.registeredDex ? 3.5 : 1.0 }
-            ];
-
-            // Evaluate each ball
-            const results = balls.map(ball => {
-                // Base Catch Value 'a'
-                // SV Max value is 255.
-                let a = hpMultiplier * C * ball.modifier * statusModifier * badgePenalty * lowLevelModifier;
                 
-                let catchProbability = 0;
+                const details = { 
+                    name: speciesData.name, 
+                    captureRate: speciesData.capture_rate, 
+                    types 
+                };
                 
-                if (a >= 255) {
-                    catchProbability = 100;
+                this.cache[name] = details;
+                return details;
+            }
+        }
+
+        // ==========================================
+        // 4. MATH ENGINE (DOMAIN LOGIC)
+        // - Pure entity methods. No UI dependencies.
+        // ==========================================
+        class CatchMechanicsEngine {
+            static _getHPMultiplier(hpPercent) {
+                const fraction = hpPercent / 100;
+                return (3 - (2 * fraction)) / 3;
+            }
+
+            static _getBadgePenalty(wildLevel, badges) {
+                let requiredBadges = 0;
+                for (let i = 0; i < SV_CONSTANTS.OBEDIENCE_LEVELS.length; i++) {
+                    if (wildLevel <= SV_CONSTANTS.OBEDIENCE_LEVELS[i]) {
+                        requiredBadges = i;
+                        break;
+                    }
+                }
+                if (badges < requiredBadges) {
+                    return Math.pow(SV_CONSTANTS.PENALTY_MULTIPLIER, requiredBadges - badges);
+                }
+                return 1.0;
+            }
+
+            static _getLowLevelModifier(level) {
+                return (level <= 13) ? (36 - 2 * level) / 10 : 1.0;
+            }
+
+            static _getStatusModifier(status) {
+                if (['sleep', 'freeze'].includes(status)) return 2.5;
+                if (['paralyze', 'poison', 'burn'].includes(status)) return 1.5;
+                return 1.0;
+            }
+
+            static _getAvailableBalls(ctx) {
+                return [
+                    { name: 'Poké Ball', id: 'poke', color: 'bg-red-50 text-red-600', border:'border-red-100', modifier: 1 },
+                    { name: 'Great Ball', id: 'great', color: 'bg-blue-50 text-blue-600', border:'border-blue-100', modifier: 1.5 },
+                    { name: 'Ultra Ball', id: 'ultra', color: 'bg-yellow-50 text-yellow-600', border:'border-yellow-200', modifier: 2.0 },
+                    { name: 'Quick Ball', id: 'quick', color: 'bg-cyan-50 text-cyan-600', border:'border-cyan-100', modifier: ctx.turn === 1 ? 5.0 : 1.0 },
+                    { name: 'Dusk Ball', id: 'dusk', color: 'bg-green-50 text-green-700', border:'border-green-200', modifier: ctx.timeEnvironment === 'night' ? 3.0 : 1.0 },
+                    { name: 'Timer Ball', id: 'timer', color: 'bg-orange-50 text-orange-600', border:'border-orange-100', modifier: Math.min(1 + ((ctx.turn - 1) * 0.3), 4.0) },
+                    { name: 'Net Ball', id: 'net', color: 'bg-sky-50 text-sky-600', border:'border-sky-100', modifier: (ctx.pokeTypes.includes('water') || ctx.pokeTypes.includes('bug')) ? 3.5 : 1.0 },
+                    { name: 'Repeat Ball', id: 'repeat', color: 'bg-rose-50 text-rose-600', border:'border-rose-100', modifier: ctx.registeredDex ? 3.5 : 1.0 }
+                ];
+            }
+
+            static executeCatchRolls(ctx) {
+                if (!ctx.pokemon) return [];
+
+                const hpMod = this._getHPMultiplier(ctx.hpPercent);
+                const badgePen = this._getBadgePenalty(ctx.pokemonLevel, ctx.playerBadges);
+                const lvlMod = this._getLowLevelModifier(ctx.pokemonLevel);
+                const statMod = this._getStatusModifier(ctx.status);
+                
+                const balls = this._getAvailableBalls(ctx);
+
+                return balls.map(ball => {
+                    const baseA = hpMod * ctx.pokemon.captureRate * ball.modifier * statMod * badgePen * lvlMod;
+                    
+                    let catchProb = 0;
+                    if (baseA >= SV_CONSTANTS.MAX_CATCH_VALUE) {
+                        catchProb = 100;
+                    } else {
+                        // Shake Pass Probability
+                        const bVal = SV_CONSTANTS.BASE_SHAKE_PROB * Math.pow(baseA / SV_CONSTANTS.MAX_CATCH_VALUE, 0.25);
+                        const pShake = bVal / SV_CONSTANTS.BASE_SHAKE_PROB;
+                        
+                        // Critical Catch Probability
+                        const dexMod = ctx.registeredDex ? 2.0 : 0; 
+                        const charmMod = ctx.catchingCharm ? 2.0 : 1.0;
+                        const cVal = Math.floor((baseA * dexMod * charmMod) / SV_CONSTANTS.CRIT_DENOMINATOR);
+                        const pCrit = Math.min(1, Math.max(0, cVal / SV_CONSTANTS.CRIT_MAX_PROB));
+                        
+                        // Bayesian union of mutually exclusive catch scenarios
+                        const pTotal = (pCrit * pShake) + ((1 - pCrit) * Math.pow(pShake, SV_CONSTANTS.SHAKE_CHECKS));
+                        catchProb = Math.min(100, Math.max(0, pTotal * 100));
+                    }
+                    return { ...ball, prob: catchProb };
+                }).sort((a, b) => b.prob - a.prob);
+            }
+        }
+
+        // ==========================================
+        // 5. VIEW CONTROLLER (PRESENTER)
+        // ==========================================
+        class AppController {
+            constructor() {
+                this.api = new PokemonAPI();
+                this.ui = {
+                    pokemonInput: document.getElementById('pokemonInput'),
+                    searchResults: document.getElementById('searchResults'),
+                    selectedInfo: document.getElementById('selectedPokemonInfo'),
+                    hpSlider: document.getElementById('hpSlider'),
+                    hpLabel: document.getElementById('hpValueLabel'),
+                    statusSelect: document.getElementById('statusSelect'),
+                    pokemonLevel: document.getElementById('pokemonLevel'),
+                    badgesCount: document.getElementById('badgesCount'),
+                    turnCount: document.getElementById('turnCount'),
+                    timeSelect: document.getElementById('timeSelect'),
+                    catchingCharm: document.getElementById('catchingCharm'),
+                    registeredDex: document.getElementById('registeredPokedex'),
+                    emptyState: document.getElementById('emptyState'),
+                    resultsList: document.getElementById('resultsList'),
+                    baseCatchRateLabel: document.getElementById('baseCatchRateLabel')
+                };
+
+                this.bindEvents();
+                this.api.preloadSpecies();
+            }
+
+            bindEvents() {
+                this.ui.hpSlider.addEventListener('input', (e) => this.handleInput('hpPercent', parseInt(e.target.value), () => {
+                    this.ui.hpLabel.textContent = state.hpPercent + '%';
+                }));
+                this.ui.statusSelect.addEventListener('change', (e) => this.handleInput('status', e.target.value));
+                this.ui.pokemonLevel.addEventListener('input', (e) => this.handleInput('pokemonLevel', this.clampNumber(e.target.value, 1, 100)));
+                this.ui.badgesCount.addEventListener('change', (e) => this.handleInput('playerBadges', parseInt(e.target.value) || 0));
+                this.ui.turnCount.addEventListener('input', (e) => this.handleInput('turn', this.clampNumber(e.target.value, 1, 999)));
+                this.ui.timeSelect.addEventListener('change', (e) => this.handleInput('timeEnvironment', e.target.value));
+                this.ui.catchingCharm.addEventListener('change', (e) => this.handleInput('catchingCharm', e.target.checked));
+                this.ui.registeredDex.addEventListener('change', (e) => this.handleInput('registeredDex', e.target.checked));
+
+                this.ui.pokemonInput.addEventListener('input', (e) => this.handleSearch(e.target.value.toLowerCase().trim()));
+                
+                document.addEventListener('click', (e) => {
+                    if(!this.ui.pokemonInput.contains(e.target) && !this.ui.searchResults.contains(e.target)) {
+                        this.ui.searchResults.classList.add('hidden');
+                    }
+                });
+            }
+
+            clampNumber(val, min, max) {
+                return Math.max(min, Math.min(max, parseInt(val) || min));
+            }
+
+            handleInput(stateKey, value, sideEffect = null) {
+                state[stateKey] = value;
+                if(sideEffect) sideEffect();
+                this.triggerCalculation();
+            }
+
+            handleSearch(query) {
+                const matches = this.api.fuzzySearch(query);
+                if (matches.length === 0 && query.length >= 2) {
+                    this.ui.searchResults.innerHTML = `<div class="p-4 text-xs font-semibold text-slate-500 text-center">Nenhum pokemon encontrado.</div>`;
+                    this.ui.searchResults.classList.remove('hidden');
+                    return;
+                }
+                
+                if (matches.length > 0) {
+                    this.ui.searchResults.innerHTML = matches.map(name => `
+                        <div class="p-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center transition" data-name="${name}">
+                            <span class="text-sm font-bold capitalize text-slate-800">${name}</span>
+                            <i data-lucide="download" class="w-4 h-4 text-slate-300"></i>
+                        </div>
+                    `).join('');
+                    
+                    // Attach explicit event listeners instead of inline onclick (Avoids polluting global scope)
+                    Array.from(this.ui.searchResults.children).forEach(node => {
+                        node.addEventListener('click', () => this.selectPokemonProcess(node.getAttribute('data-name')));
+                    });
+
+                    lucide.createIcons();
+                    this.ui.searchResults.classList.remove('hidden');
                 } else {
-                    // Shake probability (b = 65536 * (a/255)^0.25)
-                    const b = 65536 * Math.pow(a / 255, 0.25);
-                    const pShake = b / 65536; // Chance to pass a single shake
-                    
-                    // Critical Catch calculation (c = (a * DexModifier * CharmModifier) / 6)
-                    let dexModifier = appState.registeredDex ? 2.0 : 0; 
-                    let charmModifier = appState.catchingCharm ? 2.0 : 1.0;
-                    
-                    let c = Math.floor((a * dexModifier * charmModifier) / 6);
-                    let pCrit = Math.min(1, Math.max(0, c / 256));
-                    
-                    // Final probability calculation:
-                    // Se Critar: precisa de 1 shake. Se não Critar: precisa de 4 shakes.
-                    let pCatch = (pCrit * pShake) + ((1 - pCrit) * Math.pow(pShake, 4));
-
-                    catchProbability = Math.min(100, Math.max(0, pCatch * 100));
+                    this.ui.searchResults.classList.add('hidden');
                 }
+            }
 
-                return { ...ball, prob: catchProbability };
-            });
-
-            // Sort by highest probability
-            results.sort((x, y) => y.prob - x.prob);
-
-            renderResults(results);
-        }
-
-        function renderResults(results) {
-            ui.resultsList.innerHTML = '';
-            
-            results.forEach((r, idx) => {
-                const isTop = idx === 0; // The absolute best option
+            async selectPokemonProcess(name) {
+                this.ui.pokemonInput.value = "Carregando dados...";
+                this.ui.searchResults.classList.add('hidden');
                 
-                const card = document.createElement('div');
-                card.className = `p-4 rounded-2xl flex items-center justify-between border transition-all duration-300 pokeball-card bg-white shadow-sm ${r.border}`;
-                if (isTop) {
-                    card.classList.add('shadow-md', 'shadow-purple-100');
-                    card.style.transform = 'scale(1.02)';
+                try {
+                    const details = await this.api.fetchDetails(name);
+                    
+                    state.pokemon = { name: details.name, captureRate: details.captureRate };
+                    state.pokeTypes = details.types;
+                    
+                    this.ui.pokemonInput.value = name.charAt(0).toUpperCase() + name.slice(1);
+                    
+                    this.ui.selectedInfo.querySelector('span').textContent = `Base Catch Rate: ${details.captureRate} | Tipos: ${state.pokeTypes.join(', ') || 'N/A'}`;
+                    this.ui.selectedInfo.classList.remove('hidden');
+                    
+                    this.ui.baseCatchRateLabel.textContent = `Base: ${details.captureRate}`;
+                    this.ui.baseCatchRateLabel.classList.remove('hidden');
+
+                    this.triggerCalculation();
+                } catch(e) {
+                    this.ui.pokemonInput.value = "Erro na conexão API";
+                    console.error(e);
                 }
+            }
 
-                card.innerHTML = `
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-full ${r.color} flex items-center justify-center font-black ${isTop ? 'border-2 border-inherit ring-4 ring-white shadow-inner' : ''} overflow-hidden p-1 shadow-sm">
-                           <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${r.id}-ball.png" alt="${r.name}" class="w-full h-full object-contain scale-125 drop-shadow-sm brightness-110">
+            triggerCalculation() {
+                if (!state.pokemon) return;
+                const results = CatchMechanicsEngine.executeCatchRolls(state);
+                this.renderResults(results);
+            }
+
+            renderResults(results) {
+                this.ui.emptyState.classList.add('hidden');
+                this.ui.resultsList.classList.remove('hidden');
+                this.ui.resultsList.innerHTML = '';
+                
+                results.forEach((r, idx) => {
+                    const isTop = idx === 0;
+                    const card = document.createElement('div');
+                    card.className = `p-4 rounded-2xl flex items-center justify-between border transition-all duration-300 pokeball-card bg-white shadow-sm ${r.border}`;
+                    if (isTop) {
+                        card.classList.add('shadow-md', 'shadow-purple-100');
+                        card.style.transform = 'scale(1.02)';
+                    }
+
+                    card.innerHTML = `
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full ${r.color} flex items-center justify-center font-black ${isTop ? 'border-2 border-inherit ring-4 ring-white shadow-inner' : ''} overflow-hidden p-1 shadow-sm">
+                               <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${r.id}-ball.png" alt="${r.name}" class="w-full h-full object-contain scale-125 drop-shadow-sm brightness-110">
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                    ${r.name} 
+                                    ${isTop ? '<span class="text-[9px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full uppercase tracking-wider font-black">Recomendada</span>' : ''}
+                                </h3>
+                                <p class="text-[10px] uppercase font-bold text-slate-400 mt-1 tracking-wider">Modificador: ${r.modifier.toFixed(1)}x</p>
+                            </div>
                         </div>
-                        <div>
-                            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                                ${r.name} 
-                                ${isTop ? '<span class="text-[9px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full uppercase tracking-wider font-black">Recomendada</span>' : ''}
-                            </h3>
-                            <p class="text-[10px] uppercase font-bold text-slate-400 mt-1 tracking-wider">Modificador: ${r.modifier.toFixed(1)}x</p>
+                        <div class="text-right">
+                            <div class="text-2xl font-black ${this.getProbColor(r.prob)}">${r.prob.toFixed(1)}%</div>
+                            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Chance</p>
                         </div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-2xl font-black ${getProbColor(r.prob)}">${r.prob.toFixed(1)}%</div>
-                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Chance</p>
-                    </div>
-                `;
-                ui.resultsList.appendChild(card);
-            });
+                    `;
+                    this.ui.resultsList.appendChild(card);
+                });
+            }
+
+            getProbColor(prob) {
+                if (prob >= 80) return 'text-emerald-500';
+                if (prob >= 50) return 'text-amber-500';
+                if (prob >= 25) return 'text-orange-500';
+                return 'text-red-500';
+            }
         }
 
-        function getProbColor(prob) {
-            if (prob >= 80) return 'text-emerald-500';
-            if (prob >= 50) return 'text-amber-500';
-            if (prob >= 25) return 'text-orange-500';
-            return 'text-red-500';
-        }
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            window.App = new AppController();
+        });
     </script>
 </body>
 </html>
