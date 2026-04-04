@@ -29,7 +29,6 @@ Renato HUB/
 ├── AGENTS.md               ← THIS FILE (agent reference)
 ├── index.html              ← Hub Central (landing page)
 ├── academic-flow.html      ← Academic Flow app
-├── task-flow.html          ← Task Flow app
 └── poke-strategy.html      ← Poké Strategy app
 ```
 
@@ -80,7 +79,6 @@ body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparen
 |---|---|---|
 | Hub Central | `blue-600` | `blue-` |
 | Academic Flow | `blue-600` | `blue-` |
-| Task Flow | `indigo-600` | `indigo-` |
 | Poké Strategy | `purple-600` | `purple-` |
 
 When creating a new app, pick a **unique** Tailwind color prefix.
@@ -152,14 +150,6 @@ const firebaseConfig = {
       "SE616": "present",
       "SE619": "absent"
     }
-  },
-  "deadlines": {
-    "1711041600000": {
-      "type": "Prova",
-      "subject": "SE616",
-      "date": "2026-04-10",
-      "desc": "P1"
-    }
   }
 }
 ```
@@ -167,10 +157,9 @@ const firebaseConfig = {
 | Key | Used By | Description |
 |---|---|---|
 | `absences` | Academic Flow | Keyed by `YYYY-MM-DD`, values are `{subjectCode: status}`. Status values: `'present'`, `'absent'`, `'cancelled'` |
-| `deadlines` | Task Flow | Keyed by `Date.now()` string (timestamp ID), values are `{type, subject, date, desc}`. Type values: `'Prova'`, `'Trabalho'` |
 
 ### Shared Subject Codes
-Both Academic Flow and Task Flow reference the same academic subjects:
+Academic Flow references the following academic subjects:
 
 ```javascript
 const subjects = {
@@ -186,7 +175,7 @@ Academic Flow extends these with schedule info:
 // days: 0=Sun, 1=Mon, ..., 6=Sat
 ```
 
-> **If the user adds or removes a subject**, update the `subjects` object in **both** `academic-flow.html` and `task-flow.html`, as well as the `<select>` options in `task-flow.html`.
+> **If the user adds or removes a subject**, update the `subjects` object in `academic-flow.html`.
 
 ---
 
@@ -211,17 +200,7 @@ Academic Flow extends these with schedule info:
   - Mobile bottom nav with tab switching (Summary / Calendar / Details)
 - **Key functions:** `renderAll()`, `showDay()`, `setStatus()`, `getDayClass()`, `changeMonth()`
 
-### 6.3 Task Flow (`task-flow.html`)
-- **Purpose:** Exam/assignment deadline tracker.
-- **Firebase key:** `deadlines`
-- **Features:**
-  - Chronologically sorted deadline cards with countdown badges
-  - Color-coded urgency (blue = far, orange = ≤3 days, pulse-red = today, dark-red = overdue)
-  - Modal form to add new events (Type radio, Subject select, Date, Description)
-  - Delete button (hover-reveal on each card)
-- **Key functions:** `addDeadline()`, `removeDeadline()`, `renderDeadlines()`
-
-### 6.4 Poké Strategy (`poke-strategy.html`)
+### 6.3 Poké Strategy (`poke-strategy.html`)
 - **Purpose:** Calculadora de captura e Matriz de danos bi-funcional (Gen 9).
 - **No Firebase.** Uses [PokéAPI](https://pokeapi.co/) REST API for data.
 - **Features:**
