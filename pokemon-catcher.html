@@ -20,13 +20,16 @@
         
         <!-- Header -->
         <header class="flex justify-between items-center mb-8">
-            <a href="index.html" class="p-2 bg-white rounded-xl shadow-sm text-slate-400 hover:text-purple-600 transition">
-                <i data-lucide="arrow-left" class="w-6 h-6"></i>
-            </a>
-            <div class="text-right">
-                <h1 class="text-2xl md:text-3xl font-800 tracking-tighter italic uppercase text-slate-900 leading-none">Poké<span class="text-purple-600">Catcher</span></h1>
-                <p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Geração 9 • Violet</p>
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="p-2 bg-white rounded-xl shadow-sm border border-slate-100 text-slate-400 hover:text-purple-600 transition shrink-0">
+                    <i data-lucide="arrow-left" class="w-6 h-6"></i>
+                </a>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-800 tracking-tighter italic uppercase text-slate-900 leading-none">Poké<span class="text-purple-600">Catcher</span></h1>
+                    <p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Geração 9 • Violet</p>
+                </div>
             </div>
+            <!-- Empty right space to keep balance or can be used for extra icons -->
         </header>
 
         <!-- Main Workspace -->
@@ -99,8 +102,17 @@
                     <!-- Environment & Rules -->
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Turno</label>
-                            <input type="number" id="turnCount" value="1" min="1" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-center appearance-none focus:outline-none focus:ring-2 focus:ring-purple-600">
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase text-center">Turno</label>
+                            <div class="flex items-center bg-slate-50 border border-slate-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-purple-600 h-[38px]">
+                                <button type="button" id="btnDecTurn" class="w-10 h-full text-slate-400 hover:text-purple-600 hover:bg-slate-100 transition flex items-center justify-center border-r border-slate-200 shrink-0">
+                                    <i data-lucide="minus" class="w-4 h-4"></i>
+                                </button>
+                                <input type="number" id="turnCount" value="1" min="1" class="w-full h-full bg-transparent text-sm font-bold text-center appearance-none focus:outline-none m-0 p-0" style="-moz-appearance: textfield;">
+                                <button type="button" id="btnIncTurn" class="w-10 h-full text-slate-400 hover:text-purple-600 hover:bg-slate-100 transition flex items-center justify-center border-l border-slate-200 shrink-0">
+                                    <i data-lucide="plus" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                            <style>input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }</style>
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Período/Local</label>
@@ -343,6 +355,8 @@
                     pokemonLevel: document.getElementById('pokemonLevel'),
                     badgesCount: document.getElementById('badgesCount'),
                     turnCount: document.getElementById('turnCount'),
+                    btnDecTurn: document.getElementById('btnDecTurn'),
+                    btnIncTurn: document.getElementById('btnIncTurn'),
                     timeSelect: document.getElementById('timeSelect'),
                     catchingCharm: document.getElementById('catchingCharm'),
                     registeredDex: document.getElementById('registeredPokedex'),
@@ -362,7 +376,17 @@
                 this.ui.statusSelect.addEventListener('change', (e) => this.handleInput('status', e.target.value));
                 this.ui.pokemonLevel.addEventListener('input', (e) => this.handleInput('pokemonLevel', this.clampNumber(e.target.value, 1, 100)));
                 this.ui.badgesCount.addEventListener('change', (e) => this.handleInput('playerBadges', parseInt(e.target.value) || 0));
-                this.ui.turnCount.addEventListener('input', (e) => this.handleInput('turn', this.clampNumber(e.target.value, 1, 999)));
+                
+                // Turn logic with Stepper buttons
+                const updateTurn = (val) => {
+                    const clamped = this.clampNumber(val, 1, 999);
+                    this.ui.turnCount.value = clamped;
+                    this.handleInput('turn', clamped);
+                };
+                this.ui.turnCount.addEventListener('input', (e) => updateTurn(e.target.value));
+                this.ui.btnDecTurn.addEventListener('click', () => updateTurn(state.turn - 1));
+                this.ui.btnIncTurn.addEventListener('click', () => updateTurn(state.turn + 1));
+                
                 this.ui.timeSelect.addEventListener('change', (e) => this.handleInput('timeEnvironment', e.target.value));
                 this.ui.catchingCharm.addEventListener('change', (e) => this.handleInput('catchingCharm', e.target.checked));
                 this.ui.registeredDex.addEventListener('change', (e) => this.handleInput('registeredDex', e.target.checked));
