@@ -15,17 +15,17 @@
         .pokeball-card:hover { transform: translateY(-5px); }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-900 pb-32 md:pb-10 min-h-screen">
-    <div class="max-w-4xl mx-auto px-6 pt-10 md:pt-16">
+<body class="bg-slate-50 text-slate-900 pb-24 md:pb-10 min-h-screen">
+    <div class="max-w-4xl mx-auto px-4 md:px-6 pt-6 md:pt-12">
         
         <!-- Header -->
-        <header class="flex justify-between items-center mb-8">
+        <header class="flex justify-between items-center mb-8 md:mb-12">
             <div class="flex items-center gap-4">
                 <a href="index.html" class="p-2 bg-white rounded-xl shadow-sm border border-slate-100 text-slate-400 hover:text-purple-600 transition shrink-0">
                     <i data-lucide="arrow-left" class="w-6 h-6"></i>
                 </a>
                 <div>
-                    <h1 class="text-2xl md:text-3xl font-800 tracking-tighter italic uppercase text-slate-900 leading-none">Poké<span class="text-purple-600">Strategy</span></h1>
+                    <h1 class="text-2xl md:text-4xl font-800 tracking-tighter italic uppercase text-slate-900 leading-none">Poké<span class="text-purple-600">Strategy</span></h1>
                     <p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Geração 9 • Batalha & Captura</p>
                 </div>
             </div>
@@ -561,23 +561,28 @@
 
             bindEvents() {
                 // HP State Buttons logic
+                this.renderHPState = (hpVal) => {
+                    const classesMap = {
+                        100: ['active', 'border-green-500', 'bg-green-50', 'text-green-700', 'drop-shadow-sm'],
+                        40: ['active', 'border-yellow-500', 'bg-yellow-50', 'text-yellow-700', 'drop-shadow-sm'],
+                        10: ['active', 'border-red-500', 'bg-red-50', 'text-red-700', 'drop-shadow-sm'],
+                        1: ['active', 'border-slate-800', 'bg-slate-800', 'text-white', 'drop-shadow-sm']
+                    };
+                    const defaultClasses = ['border-transparent', 'bg-slate-100', 'text-slate-500'];
+                    
+                    document.querySelectorAll('.hp-btn').forEach(btn => {
+                        const btnHp = parseInt(btn.dataset.hp);
+                        btn.className = `hp-btn w-full h-full rounded-lg border-2 font-bold text-xs transition ${btnHp === 1 ? 'flex items-center justify-center gap-1' : ''}`;
+                        if (btnHp === hpVal) btn.classList.add(...(classesMap[hpVal] || defaultClasses));
+                        else btn.classList.add(...defaultClasses);
+                    });
+                };
+
                 const hpBtns = document.querySelectorAll('.hp-btn');
                 hpBtns.forEach(btn => {
                     btn.addEventListener('click', () => {
-                        hpBtns.forEach(b => {
-                            b.classList.remove('active', 'border-green-500', 'bg-green-50', 'text-green-700', 'border-yellow-500', 'bg-yellow-50', 'text-yellow-700', 'border-red-500', 'bg-red-50', 'text-red-700', 'border-slate-800', 'bg-slate-800', 'text-white', 'drop-shadow-sm');
-                            b.classList.add('border-transparent', 'bg-slate-100', 'text-slate-500');
-                        });
-                        
                         const hpVal = parseInt(btn.dataset.hp);
-                        btn.classList.remove('border-transparent', 'bg-slate-100', 'text-slate-500');
-                        btn.classList.add('active', 'drop-shadow-sm');
-                        
-                        if (hpVal === 100) btn.classList.add('border-green-500', 'bg-green-50', 'text-green-700');
-                        else if (hpVal === 40) btn.classList.add('border-yellow-500', 'bg-yellow-50', 'text-yellow-700');
-                        else if (hpVal === 10) btn.classList.add('border-red-500', 'bg-red-50', 'text-red-700');
-                        else btn.classList.add('border-slate-800', 'bg-slate-800', 'text-white');
-                        
+                        this.renderHPState(hpVal);
                         this.handleInput('hpPercent', hpVal);
                     });
                 });
@@ -707,8 +712,18 @@
 
                     this.triggerCalculation();
                 } catch(e) {
-                    this.ui.pokemonInput.value = "Erro na conexão API";
-                    console.error(e);
+                    this.ui.pokemonInput.value = '';
+                    this.ui.emptyState.innerHTML = `
+                        <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4">
+                            <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-red-600">Erro de Conexão</h3>
+                        <p class="text-xs text-slate-500 font-semibold mt-2 max-w-[200px] mx-auto">Falha ao buscar dados na PokeAPI. Espécie inválida ou rede indisponível.</p>
+                    `;
+                    this.ui.emptyState.classList.remove('hidden');
+                    this.ui.resultsList.classList.add('hidden');
+                    lucide.createIcons();
+                    console.error("[PokemonAPI] Erro ao buscar: ", e);
                 }
             }
 
