@@ -132,28 +132,43 @@
             btn.innerHTML = 'Salvando...';
             btn.disabled = true;
 
-            const type = document.querySelector('input[name="type"]:checked').value;
-            const subject = document.getElementById('subject').value;
-            const date = document.getElementById('date').value;
-            const desc = document.getElementById('desc').value;
-            const id = Date.now().toString();
+            try {
+                const type = document.querySelector('input[name="type"]:checked').value;
+                const subject = document.getElementById('subject').value;
+                const date = document.getElementById('date').value;
+                const desc = document.getElementById('desc').value;
+                const id = Date.now().toString();
 
-            await setDoc(doc(db, "users", "renato"), {
-                deadlines: { [id]: { type, subject, date, desc } }
-            }, { merge: true });
+                await setDoc(doc(db, "users", "renato"), {
+                    deadlines: { [id]: { type, subject, date, desc } }
+                }, { merge: true });
 
-            document.getElementById('addForm').reset();
-            document.getElementById('taskModal').classList.add('hidden');
-            btn.innerHTML = 'Salvar Evento';
-            btn.disabled = false;
+                document.getElementById('addForm').reset();
+                document.getElementById('taskModal').classList.add('hidden');
+            } catch (err) {
+                console.error("Firebase update failed", err);
+                alert("Erro ao salvar o evento. Verifique sua conexão e tente novamente.");
+            } finally {
+                btn.innerHTML = 'Salvar Evento';
+                btn.disabled = false;
+            }
         };
 
         window.removeDeadline = async (id, btn) => {
             if(!confirm("Tem certeza que deseja excluir?")) return;
+            const tempHTML = btn.innerHTML;
             btn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 animate-spin"></i>';
-            await updateDoc(doc(db, "users", "renato"), {
-                [`deadlines.${id}`]: deleteField()
-            });
+            
+            try {
+                await updateDoc(doc(db, "users", "renato"), {
+                    [`deadlines.${id}`]: deleteField()
+                });
+            } catch (err) {
+                console.error("Failed to delete", err);
+                alert("Falha ao remover o evento. Você está online?");
+                btn.innerHTML = tempHTML;
+                lucide.createIcons();
+            }
         };
 
         function renderDeadlines() {

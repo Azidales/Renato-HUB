@@ -160,19 +160,26 @@
         };
 
         window.setStatus = async (date, subId, status, btn) => {
+            const tempHTML = btn.innerHTML;
             btn.innerHTML = `<span class="animate-pulse">...</span>`;
 
-            const isToggleOff = statusData[date]?.[subId] === status;
-            const docRef = doc(db, "users", "renato");
+            try {
+                const isToggleOff = statusData[date]?.[subId] === status;
+                const docRef = doc(db, "users", "renato");
 
-            if (isToggleOff) {
-                await updateDoc(docRef, {
-                    [`absences.${date}.${subId}`]: deleteField()
-                });
-            } else {
-                await setDoc(docRef, {
-                    absences: { [date]: { [subId]: status } }
-                }, { merge: true });
+                if (isToggleOff) {
+                    await updateDoc(docRef, {
+                        [`absences.${date}.${subId}`]: deleteField()
+                    });
+                } else {
+                    await setDoc(docRef, {
+                        absences: { [date]: { [subId]: status } }
+                    }, { merge: true });
+                }
+            } catch (err) {
+                console.error("Firebase update failed", err);
+                alert("Falha na sincronização. Verifique sua conexão com a internet e tente novamente.");
+                btn.innerHTML = tempHTML;
             }
         };
 
