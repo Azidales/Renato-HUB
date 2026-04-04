@@ -314,10 +314,23 @@
             const hpMultiplier = (3 - (2 * hpFrac)) / 3;
 
             const obedienceLevels = [20, 25, 30, 35, 40, 45, 50, 55, 100];
-            const obedience = obedienceLevels[appState.badges];
+            let requiredBadges = 0;
+            for (let i = 0; i < obedienceLevels.length; i++) {
+                if (appState.pokemonLevel <= obedienceLevels[i]) {
+                    requiredBadges = i;
+                    break;
+                }
+            }
+            
             let badgePenalty = 1.0;
-            if (appState.pokemonLevel > obedience) {
-                badgePenalty = 0.8 * (obedience / appState.pokemonLevel);
+            if (appState.badges < requiredBadges) {
+                const missingBadges = requiredBadges - appState.badges;
+                badgePenalty = Math.pow(0.8, missingBadges);
+            }
+
+            let lowLevelModifier = 1.0;
+            if (appState.pokemonLevel <= 13) {
+                lowLevelModifier = (36 - 2 * appState.pokemonLevel) / 10;
             }
 
             let statusModifier = 1;
@@ -345,7 +358,7 @@
             const results = balls.map(ball => {
                 // Base Catch Value 'a'
                 // SV Max value is 255.
-                let a = (hpMultiplier * C * ball.modifier * statusModifier * badgePenalty) * catchCharmMultiplier;
+                let a = (hpMultiplier * C * ball.modifier * statusModifier * badgePenalty * lowLevelModifier) * catchCharmMultiplier;
                 
                 // Shake probability calculation
                 // b = 65536 * (a / 255)^0.25 (Original formula).
