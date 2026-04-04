@@ -25,15 +25,22 @@
                     <i data-lucide="arrow-left" class="w-6 h-6"></i>
                 </a>
                 <div>
-                    <h1 class="text-2xl md:text-3xl font-800 tracking-tighter italic uppercase text-slate-900 leading-none">Poké<span class="text-purple-600">Catcher</span></h1>
-                    <p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Geração 9 • Violet</p>
+                    <h1 class="text-2xl md:text-3xl font-800 tracking-tighter italic uppercase text-slate-900 leading-none">Poké<span class="text-purple-600">Strategy</span></h1>
+                    <p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Geração 9 • Batalha & Captura</p>
                 </div>
             </div>
             <!-- Empty right space to keep balance or can be used for extra icons -->
         </header>
 
+        <!-- Desktop Segmented Control -->
+        <div class="hidden md:flex bg-slate-200 p-1 rounded-xl mb-6 w-fit mx-auto gap-1">
+            <button onclick="App.switchTab('catch')" id="tab-catch" class="desktop-tab-btn px-6 py-2 rounded-lg text-sm font-bold bg-white shadow-sm text-purple-600 transition">Captura</button>
+            <button onclick="App.switchTab('strategy')" id="tab-strategy" class="desktop-tab-btn px-6 py-2 rounded-lg text-sm font-bold text-slate-500 hover:text-slate-700 transition">Estratégia</button>
+        </div>
+
         <!-- Main Workspace -->
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+        <div id="view-catch" class="app-view block">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
             
             <!-- Left Column: Battle Context -->
             <div class="md:col-span-5 space-y-6">
@@ -169,7 +176,87 @@
             </div>
 
         </div>
+
+        <!-- Strategy Workspace -->
+        <div id="view-strategy" class="app-view hidden">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                <!-- Left: Control Panel -->
+                <div class="md:col-span-5 space-y-6">
+                    <section class="p-6 bg-white rounded-3xl shadow-lg border border-purple-100">
+                        <h2 class="text-sm font-bold uppercase text-slate-400 tracking-widest mb-4 flex items-center gap-2">
+                            <i data-lucide="shield" class="w-4 h-4"></i> Defesa Base (Tera)
+                        </h2>
+                        
+                        <div id="strategyPokemonOverview" class="mb-6 p-4 rounded-xl border border-slate-100 bg-slate-50 text-center hidden">
+                            <h3 class="text-lg font-black uppercase text-slate-800" id="strategyPokeName">...</h3>
+                            <div class="flex items-center justify-center gap-2 mt-2" id="strategyPokeTypes"></div>
+                        </div>
+
+                        <div class="mb-4 pt-4 border-t border-slate-100">
+                            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">Fenômeno Terastal</label>
+                            <label class="flex items-center gap-3 cursor-pointer mb-3">
+                                <input type="checkbox" id="teraActive" class="w-5 h-5 accent-purple-600 rounded">
+                                <span class="text-sm font-semibold text-slate-700">Cristalizar (Mudar Tipo Único)</span>
+                            </label>
+                            
+                            <select id="teraTypeSelect" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-600 text-sm font-bold text-slate-600 opacity-50 pointer-events-none transition appearance-none">
+                                <option value="normal">Normal</option>
+                                <option value="fire">Fogo</option>
+                                <option value="water">Água</option>
+                                <option value="grass">Planta</option>
+                                <option value="electric">Elétrico</option>
+                                <option value="ice">Gelo</option>
+                                <option value="fighting">Lutador</option>
+                                <option value="poison">Venenoso</option>
+                                <option value="ground">Terra</option>
+                                <option value="flying">Voador</option>
+                                <option value="psychic">Psíquico</option>
+                                <option value="bug">Inseto</option>
+                                <option value="rock">Pedra</option>
+                                <option value="ghost">Fantasma</option>
+                                <option value="dragon">Dragão</option>
+                                <option value="dark">Sombrio</option>
+                                <option value="steel">Aço</option>
+                                <option value="fairy">Fada</option>
+                            </select>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Right: Outcome Matchup -->
+                <div class="md:col-span-7">
+                    <section id="strategyMatrix" class="h-full bg-white p-6 md:p-8 rounded-3xl shadow-md border border-slate-100 flex flex-col hidden">
+                        <h2 class="text-sm font-bold uppercase text-slate-400 tracking-widest mb-6 border-b border-slate-100 pb-4">
+                            Perigos & Resistências
+                        </h2>
+                        <div class="flex-1 space-y-6" id="matchupRender">
+                            <!-- Injected by JS Engine -->
+                        </div>
+                    </section>
+
+                    <div id="strategyEmpty" class="h-full min-h-[300px] flex flex-col items-center justify-center p-8 bg-white/50 border-2 border-dashed border-slate-200 rounded-3xl text-center">
+                        <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mb-4">
+                            <i data-lucide="help-circle" class="w-8 h-8"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-600">Selecione um Pokémon</h3>
+                        <p class="text-xs text-slate-400 font-semibold mt-2 max-w-[200px] mx-auto">Busque uma espécie na aba de Captura primeiro.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- Mobile Navigation -->
+    <nav class="md:hidden fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-md border-t border-slate-200 flex items-center justify-around z-50 pb-safe">
+        <button onclick="App.switchTab('catch')" id="mobile-tab-catch" class="mobile-tab-btn py-4 flex-1 flex flex-col items-center gap-1 text-purple-600 transition">
+            <i data-lucide="crosshair" class="w-5 h-5"></i>
+            <span class="text-[10px] font-bold uppercase tracking-widest">Captura</span>
+        </button>
+        <button onclick="App.switchTab('strategy')" id="mobile-tab-strategy" class="mobile-tab-btn py-4 flex-1 flex flex-col items-center gap-1 text-slate-400 hover:text-purple-600 transition">
+            <i data-lucide="swords" class="w-5 h-5"></i>
+            <span class="text-[10px] font-bold uppercase tracking-widest">Estratégia</span>
+        </button>
+    </nav>
 
     <!-- Core App Logic -->
     <script>
@@ -201,7 +288,46 @@
             turn: 1,
             timeEnvironment: 'day',
             catchingCharm: false,
-            registeredDex: false
+            registeredDex: false,
+            // Strategy State
+            teraActive: false,
+            teraType: 'normal'
+        };
+
+        const MATCHUP_MATRIX = {
+            normal: { w: ['fighting'], r: [], i: ['ghost'] },
+            fire: { w: ['water', 'ground', 'rock'], r: ['fire', 'grass', 'ice', 'bug', 'steel', 'fairy'], i: [] },
+            water: { w: ['electric', 'grass'], r: ['fire', 'water', 'ice', 'steel'], i: [] },
+            electric: { w: ['ground'], r: ['electric', 'flying', 'steel'], i: [] },
+            grass: { w: ['fire', 'ice', 'poison', 'flying', 'bug'], r: ['water', 'electric', 'grass', 'ground'], i: [] },
+            ice: { w: ['fire', 'fighting', 'rock', 'steel'], r: ['ice'], i: [] },
+            fighting: { w: ['flying', 'psychic', 'fairy'], r: ['bug', 'rock', 'dark'], i: [] },
+            poison: { w: ['ground', 'psychic'], r: ['grass', 'fighting', 'poison', 'bug', 'fairy'], i: [] },
+            ground: { w: ['water', 'grass', 'ice'], r: ['poison', 'rock'], i: ['electric'] },
+            flying: { w: ['electric', 'ice', 'rock'], r: ['grass', 'fighting', 'bug'], i: ['ground'] },
+            psychic: { w: ['bug', 'ghost', 'dark'], r: ['fighting', 'psychic'], i: [] },
+            bug: { w: ['fire', 'flying', 'rock'], r: ['grass', 'fighting', 'ground'], i: [] },
+            rock: { w: ['water', 'grass', 'fighting', 'ground', 'steel'], r: ['normal', 'fire', 'poison', 'flying'], i: [] },
+            ghost: { w: ['ghost', 'dark'], r: ['poison', 'bug'], i: ['normal', 'fighting'] },
+            dragon: { w: ['ice', 'dragon', 'fairy'], r: ['fire', 'water', 'electric', 'grass'], i: [] },
+            dark: { w: ['fighting', 'bug', 'fairy'], r: ['ghost', 'dark'], i: ['psychic'] },
+            steel: { w: ['fire', 'fighting', 'ground'], r: ['normal', 'grass', 'ice', 'flying', 'psychic', 'bug', 'rock', 'dragon', 'steel', 'fairy'], i: ['poison'] },
+            fairy: { w: ['poison', 'steel'], r: ['fighting', 'bug', 'dark'], i: ['dragon'] }
+        };
+
+        const TYPE_COLORS = {
+            normal: 'bg-stone-400', fire: 'bg-orange-500', water: 'bg-blue-500', electric: 'bg-yellow-400',
+            grass: 'bg-emerald-500', ice: 'bg-cyan-300', fighting: 'bg-red-600', poison: 'bg-purple-500',
+            ground: 'bg-amber-600', flying: 'bg-indigo-300', psychic: 'bg-pink-500', bug: 'bg-lime-500',
+            rock: 'bg-yellow-700', ghost: 'bg-indigo-800', dragon: 'bg-indigo-600 text-white', dark: 'bg-slate-800 text-white',
+            steel: 'bg-slate-400', fairy: 'bg-pink-400'
+        };
+
+        const POKE_TYPES_PT = {
+            normal: "Normal", fire: "Fogo", water: "Água", electric: "Elétrico", grass: "Planta",
+            ice: "Gelo", fighting: "Lutador", poison: "Venenoso", ground: "Terra", flying: "Voador",
+            psychic: "Psíquico", bug: "Inseto", rock: "Pedra", ghost: "Fantasma", dragon: "Dragão",
+            dark: "Sombrio", steel: "Aço", fairy: "Fada"
         };
 
         // ==========================================
@@ -341,6 +467,39 @@
             }
         }
 
+        class MathStrategyEngine {
+            static calculateMatchup(types) {
+                const multipliers = {};
+                // Initialize neutrality
+                Object.keys(MATCHUP_MATRIX).forEach(t => multipliers[t] = 1.0);
+                
+                // Pure Type Multiplication logic
+                types.forEach(defenderType => {
+                    if (!defenderType || !MATCHUP_MATRIX[defenderType]) return;
+                    
+                    const data = MATCHUP_MATRIX[defenderType];
+                    data.w.forEach(attackerType => multipliers[attackerType] *= 2.0);
+                    data.r.forEach(attackerType => multipliers[attackerType] *= 0.5);
+                    data.i.forEach(attackerType => multipliers[attackerType] *= 0.0);
+                });
+
+                const result = { weak: [], neutral: [], resist: [], immune: [] };
+                
+                Object.entries(multipliers).forEach(([t, val]) => {
+                    if (val >= 2.0) result.weak.push({ type: t, val });
+                    else if (val === 1.0) result.neutral.push({ type: t, val });
+                    else if (val > 0) result.resist.push({ type: t, val });
+                    else if (val === 0) result.immune.push({ type: t, val });
+                });
+
+                // Sort heavily weakest/resist first
+                result.weak.sort((a, b) => b.val - a.val);
+                result.resist.sort((a, b) => a.val - b.val);
+                
+                return result;
+            }
+        }
+
         // ==========================================
         // 5. VIEW CONTROLLER (PRESENTER)
         // ==========================================
@@ -362,7 +521,21 @@
                     registeredDex: document.getElementById('registeredPokedex'),
                     emptyState: document.getElementById('emptyState'),
                     resultsList: document.getElementById('resultsList'),
-                    baseCatchRateLabel: document.getElementById('baseCatchRateLabel')
+                    baseCatchRateLabel: document.getElementById('baseCatchRateLabel'),
+                    
+                    // Strategy Layout
+                    strategyPokemonOverview: document.getElementById('strategyPokemonOverview'),
+                    strategyPokeName: document.getElementById('strategyPokeName'),
+                    strategyPokeTypes: document.getElementById('strategyPokeTypes'),
+                    teraActive: document.getElementById('teraActive'),
+                    teraTypeSelect: document.getElementById('teraTypeSelect'),
+                    strategyMatrix: document.getElementById('strategyMatrix'),
+                    strategyEmpty: document.getElementById('strategyEmpty'),
+                    matchupRender: document.getElementById('matchupRender'),
+                    views: {
+                        catch: document.getElementById('view-catch'),
+                        strategy: document.getElementById('view-strategy')
+                    }
                 };
 
                 this.bindEvents();
@@ -411,9 +584,43 @@
 
                 this.ui.pokemonInput.addEventListener('input', (e) => this.handleSearch(e.target.value.toLowerCase().trim()));
                 
+                this.ui.teraActive.addEventListener('change', (e) => {
+                    const isActive = e.target.checked;
+                    this.ui.teraTypeSelect.classList.toggle('opacity-50', !isActive);
+                    this.ui.teraTypeSelect.classList.toggle('pointer-events-none', !isActive);
+                    this.handleInput('teraActive', isActive);
+                });
+                this.ui.teraTypeSelect.addEventListener('change', (e) => this.handleInput('teraType', e.target.value));
+
                 document.addEventListener('click', (e) => {
                     if(!this.ui.pokemonInput.contains(e.target) && !this.ui.searchResults.contains(e.target)) {
                         this.ui.searchResults.classList.add('hidden');
+                    }
+                });
+            }
+
+            switchTab(tabMode) {
+                // Toggle Views
+                this.ui.views.catch.classList.toggle('hidden', tabMode !== 'catch');
+                this.ui.views.catch.classList.toggle('block', tabMode === 'catch');
+                this.ui.views.strategy.classList.toggle('hidden', tabMode !== 'strategy');
+                this.ui.views.strategy.classList.toggle('block', tabMode === 'strategy');
+
+                // Adjust Highlight
+                document.querySelectorAll('.desktop-tab-btn, .mobile-tab-btn').forEach(node => {
+                    if(node.id.includes('catch') && tabMode === 'catch') {
+                        node.classList.add('bg-white', 'shadow-sm', 'text-purple-600');
+                        node.classList.remove('text-slate-500', 'hover:text-slate-700'); 
+                        if(node.classList.contains('mobile-tab-btn')) node.classList.add('text-purple-600');
+                    } else if (node.id.includes('strategy') && tabMode === 'strategy') {
+                        node.classList.add('bg-white', 'shadow-sm', 'text-purple-600');
+                        node.classList.remove('text-slate-500', 'hover:text-slate-700');
+                        if(node.classList.contains('mobile-tab-btn')) node.classList.add('text-purple-600');
+                    } else {
+                        // Deactivate
+                        node.classList.remove('bg-white', 'shadow-sm');
+                        if(!node.classList.contains('mobile-tab-btn')) node.classList.add('text-slate-500', 'hover:text-slate-700');
+                        node.classList.remove('text-purple-600');
                     }
                 });
             }
@@ -483,8 +690,44 @@
 
             triggerCalculation() {
                 if (!state.pokemon) return;
+                
+                // Catch Flow
                 const results = CatchMechanicsEngine.executeCatchRolls(state);
                 this.renderResults(results);
+
+                // Strategy Flow
+                this.ui.strategyEmpty.classList.add('hidden');
+                this.ui.strategyMatrix.classList.remove('hidden');
+                this.ui.strategyPokemonOverview.classList.remove('hidden');
+                this.ui.strategyPokeName.textContent = state.pokemon.name;
+                
+                const activeTypes = state.teraActive ? [state.teraType] : state.pokeTypes;
+                
+                this.ui.strategyPokeTypes.innerHTML = activeTypes.map(t => `<span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase text-white shadow-sm ${TYPE_COLORS[t] || 'bg-slate-400'}">${POKE_TYPES_PT[t] || t}</span>`).join('');
+                
+                const matchup = MathStrategyEngine.calculateMatchup(activeTypes);
+                this.renderStrategy(matchup);
+            }
+
+            renderStrategy(matchup) {
+                const buildSection = (title, items, isDanger) => {
+                    if (items.length === 0) return '';
+                    const chips = items.map(t => `<div class="px-4 py-2 flex items-center justify-between rounded-xl shadow-sm ${isDanger ? 'bg-red-50/50 border border-red-100' : 'bg-slate-50 border border-slate-100'}">
+                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase text-slate-800 shadow-sm ${TYPE_COLORS[t.type] || 'bg-slate-300'} ${TYPE_COLORS[t.type] && TYPE_COLORS[t.type].includes('text-white') ? '' : 'text-slate-800 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]'} mix-blend-hard-light">${POKE_TYPES_PT[t.type] || t.type}</span>
+                        <span class="text-sm font-black ${isDanger ? 'text-red-600' : 'text-slate-600'}">${t.val}x</span>
+                    </div>`).join('');
+                    
+                    return `<div>
+                        <h4 class="text-[10px] uppercase font-bold tracking-widest text-slate-400 mb-3">${title}</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">${chips}</div>
+                    </div>`;
+                };
+
+                this.ui.matchupRender.innerHTML = `
+                    ${buildSection('Leva Dano Extremo (Fraqueza)', matchup.weak, true)}
+                    ${buildSection('Imune A (Leva Zero)', matchup.immune, false)}
+                    ${buildSection('Resiste A (Meio Dano)', matchup.resist, false)}
+                `;
             }
 
             renderResults(results) {

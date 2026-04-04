@@ -30,7 +30,7 @@ Renato HUB/
 ├── index.html              ← Hub Central (landing page)
 ├── academic-flow.html      ← Academic Flow app
 ├── task-flow.html          ← Task Flow app
-└── pokemon-catcher.html    ← Poké Catcher app
+└── poke-strategy.html      ← Poké Strategy app
 ```
 
 > **IMPORTANT:** All app files are **flat in the root directory**. Do NOT create subfolders for new apps. Each app is a single, self-contained `.html` file.
@@ -81,7 +81,7 @@ body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparen
 | Hub Central | `blue-600` | `blue-` |
 | Academic Flow | `blue-600` | `blue-` |
 | Task Flow | `indigo-600` | `indigo-` |
-| Poké Catcher | `purple-600` | `purple-` |
+| Poké Strategy | `purple-600` | `purple-` |
 
 When creating a new app, pick a **unique** Tailwind color prefix.
 
@@ -221,15 +221,13 @@ Academic Flow extends these with schedule info:
   - Delete button (hover-reveal on each card)
 - **Key functions:** `addDeadline()`, `removeDeadline()`, `renderDeadlines()`
 
-### 6.4 Poké Catcher (`pokemon-catcher.html`)
-- **Purpose:** Pokémon catch rate calculator for Gen 9 (Violet).
-- **No Firebase.** Uses [PokéAPI](https://pokeapi.co/) REST API.
+### 6.4 Poké Strategy (`poke-strategy.html`)
+- **Purpose:** Calculadora de captura e Matriz de danos bi-funcional (Gen 9).
+- **No Firebase.** Uses [PokéAPI](https://pokeapi.co/) REST API for data.
 - **Features:**
-  - Fuzzy Pokémon search from cached species list (~1500 names)
-  - HP slider, status condition select, turn counter, time/location toggle
-  - Player bonuses (Catching Charm, Pokédex registration)
-  - Real-time calculation of catch probability for 8 ball types, sorted by effectiveness
-- **Key functions:** `calculateRates()`, `renderResults()`, `fetchAndSelect()`, `loadPokemonNames()`
+  - Aba de Captura (Catch Rate): Matemática estatística de Insígnias, HP em 4 estados, e Críticos Bayesianos.
+  - Aba de Estratégia (Matchup): Matriz defensiva 18x18 estática revelando fraquezas/resistências instantâneas, suportando cálculo isolado de *Terastallization*.
+  - Navegação Mobile Inferior (Bottom Nav Tab Pattern).
 
 ---
 
