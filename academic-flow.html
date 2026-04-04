@@ -29,7 +29,7 @@
 </head>
 <body class="bg-slate-50 text-slate-900 pb-24 md:pb-10">
 
-    <div id="loader" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center transition-opacity duration-500">
+    <div id="global-loader" class="fixed inset-0 bg-white/90 z-50 flex flex-col items-center justify-center transition-opacity duration-500">
         <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
         <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Sincronizando Cloud...</p>
     </div>
@@ -195,7 +195,7 @@
                 subjects = fallbackSubjects;
             }
             renderAll();
-            const loader = document.getElementById('loader');
+            const loader = document.getElementById('global-loader');
             if(loader) {
                 loader.style.opacity = '0';
                 setTimeout(() => loader.style.display = 'none', 500);
@@ -308,7 +308,7 @@
             if (hasA && hasC && !hasP) return 'bg-gradient-to-br from-red-50 to-slate-200 text-slate-500 font-800 border-red-200';
             if (hasP) return 'bg-blue-50 text-blue-600 font-800 border-blue-200';
             if (hasA) return 'bg-red-50 text-red-500 font-800 border-red-200';
-            if (hasC) return 'bg-slate-200 text-slate-400 font-bold border-slate-300';
+            if (hasC) return 'bg-slate-300 text-slate-600 font-bold border-slate-400';
             return '';
         }
 
@@ -351,9 +351,11 @@
                 const statusClass = Object.keys(st).length > 0 ? getDayClass(st) : '';
                 
                 // Using Tailwind equivalents for NO-CLASS
-                const baseClass = has ? 'bg-slate-50 text-slate-800 font-bold hover:bg-slate-100' : 'bg-slate-50/40 text-slate-400 border-slate-100 hover:bg-slate-50';
+                // Add an 'x' icon for cancelled days for better visibility (WCAG)
+                const isCancelled = Object.values(st).includes('cancelled');
+                const dayText = isCancelled ? `${d} <span class="text-[8px] absolute top-1.5 right-1.5 opacity-60">✖</span>` : d;
                 
-                cal.innerHTML += `<div role="button" tabindex="0" aria-label="Dia ${d}. ${has ? 'Possui aula.' : 'Sem aula.'}" onclick="window.showDay('${dk}', ${dw})" onkeydown="window.handleDayKeypress(event, '${dk}', ${dw})" class="day-card ${statusClass || baseClass} ${dk===todayKey?'today':''} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600">${d}</div>`;
+                cal.innerHTML += `<div role="button" tabindex="0" aria-label="Dia ${d}. ${has ? 'Possui aula.' : 'Sem aula.'}" onclick="window.showDay('${dk}', ${dw})" onkeydown="window.handleDayKeypress(event, '${dk}', ${dw})" class="day-card relative ${statusClass || baseClass} ${dk===todayKey?'today':''} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600">${dayText}</div>`;
             }
             lucide.createIcons();
             

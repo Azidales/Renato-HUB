@@ -16,6 +16,11 @@
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 pb-24 md:pb-10 min-h-screen">
+    <div id="global-loader" class="fixed inset-0 bg-white/90 z-50 flex flex-col items-center justify-center transition-opacity duration-500">
+        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600 mb-4"></div>
+        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Iniciando Banco de Dados...</p>
+    </div>
+
     <div class="max-w-4xl mx-auto px-4 md:px-6 pt-6 md:pt-12">
         
         <!-- Header -->
@@ -29,7 +34,9 @@
                     <p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Geração 9 • Batalha & Captura</p>
                 </div>
             </div>
-            <!-- Empty right space to keep balance or can be used for extra icons -->
+            <div class="h-10 w-10 rounded-full bg-purple-600 flex items-center justify-center text-white shadow-lg shrink-0">
+                <i data-lucide="user" class="w-5 h-5"></i>
+            </div>
         </header>
 
         <!-- Desktop Segmented Control -->
@@ -123,12 +130,12 @@
                                 <button type="button" id="btnDecTurn" class="w-10 h-full text-slate-400 hover:text-purple-600 hover:bg-slate-100 transition flex items-center justify-center border-r border-slate-200 shrink-0">
                                     <i data-lucide="minus" class="w-4 h-4"></i>
                                 </button>
-                                <input type="number" id="turnCount" value="1" min="1" class="w-full h-full bg-transparent text-sm font-bold text-center appearance-none focus:outline-none m-0 p-0" style="-moz-appearance: textfield;">
+                                <input type="number" id="turnCount" value="1" min="1" class="w-full h-full bg-transparent text-sm font-bold text-center appearance-none focus:outline-none m-0 p-0" style="appearance: textfield; -moz-appearance: textfield;">
                                 <button type="button" id="btnIncTurn" class="w-10 h-full text-slate-400 hover:text-purple-600 hover:bg-slate-100 transition flex items-center justify-center border-l border-slate-200 shrink-0">
                                     <i data-lucide="plus" class="w-4 h-4"></i>
                                 </button>
                             </div>
-                            <style>input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }</style>
+                            <style>input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { appearance: none; -webkit-appearance: none; margin: 0; }</style>
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Período/Local</label>
@@ -351,13 +358,24 @@
             }
 
             async preloadSpecies() {
+                const loader = document.getElementById('global-loader');
                 try {
-                    const res = await fetch('https://pokeapi.co/api/v2/pokemon-species?limit=1500');
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000);
+                    
+                    const res = await fetch('https://pokeapi.co/api/v2/pokemon-species?limit=1500', { signal: controller.signal });
+                    clearTimeout(timeoutId);
+                    
                     if (!res.ok) throw new Error('API Indisponível');
                     const data = await res.json();
                     this.speciesList = data.results.map(p => p.name);
                 } catch (err) {
-                    console.error('[PokemonAPI] Falha ao pre-carregar lista de espécies:', err);
+                    console.error('[PokemonAPI] Crítico: Falha no pre-carregamento da malha de dados.', err);
+                } finally {
+                    if (loader) {
+                        loader.style.opacity = '0';
+                        setTimeout(() => { loader.style.display = 'none'; }, 500);
+                    }
                 }
             }
 
