@@ -55,13 +55,15 @@
                         </div>
                     </div>
 
-                    <!-- HP -->
+                    <!-- HP State -->
                     <div class="mb-4">
-                        <div class="flex justify-between items-end mb-2">
-                            <label class="block text-xs font-bold text-slate-500 uppercase">HP Restante (%)</label>
-                            <span id="hpValueLabel" class="text-xs font-black text-slate-700">100%</span>
+                        <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">HP Restante</label>
+                        <div class="grid grid-cols-4 gap-2 h-[38px]" id="hpStateGroup">
+                            <button type="button" data-hp="100" class="hp-btn active w-full h-full rounded-lg border-2 border-green-500 bg-green-50 text-green-700 font-bold text-xs transition drop-shadow-sm" title="Vida Verde (Cheio)">Verde</button>
+                            <button type="button" data-hp="40" class="hp-btn w-full h-full rounded-lg border-2 border-transparent bg-slate-100 text-slate-500 hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700 font-bold text-xs transition" title="Vida Amarela">Amar.</button>
+                            <button type="button" data-hp="10" class="hp-btn w-full h-full rounded-lg border-2 border-transparent bg-slate-100 text-slate-500 hover:border-red-500 hover:bg-red-50 hover:text-red-700 font-bold text-xs transition" title="Vida Vermelha">Verm.</button>
+                            <button type="button" data-hp="1" class="hp-btn w-full h-full rounded-lg border-2 border-transparent bg-slate-100 text-slate-500 hover:border-slate-800 hover:bg-slate-800 hover:text-white font-bold text-xs flex items-center justify-center gap-1 transition" title="Falso Torto (1 HP)">1 HP</button>
                         </div>
-                        <input type="range" id="hpSlider" min="1" max="100" value="100" class="w-full accent-purple-600 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
                     </div>
 
                     <!-- Status Condition -->
@@ -349,8 +351,6 @@
                     pokemonInput: document.getElementById('pokemonInput'),
                     searchResults: document.getElementById('searchResults'),
                     selectedInfo: document.getElementById('selectedPokemonInfo'),
-                    hpSlider: document.getElementById('hpSlider'),
-                    hpLabel: document.getElementById('hpValueLabel'),
                     statusSelect: document.getElementById('statusSelect'),
                     pokemonLevel: document.getElementById('pokemonLevel'),
                     badgesCount: document.getElementById('badgesCount'),
@@ -370,9 +370,27 @@
             }
 
             bindEvents() {
-                this.ui.hpSlider.addEventListener('input', (e) => this.handleInput('hpPercent', parseInt(e.target.value), () => {
-                    this.ui.hpLabel.textContent = state.hpPercent + '%';
-                }));
+                // HP State Buttons logic
+                const hpBtns = document.querySelectorAll('.hp-btn');
+                hpBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        hpBtns.forEach(b => {
+                            b.classList.remove('active', 'border-green-500', 'bg-green-50', 'text-green-700', 'border-yellow-500', 'bg-yellow-50', 'text-yellow-700', 'border-red-500', 'bg-red-50', 'text-red-700', 'border-slate-800', 'bg-slate-800', 'text-white', 'drop-shadow-sm');
+                            b.classList.add('border-transparent', 'bg-slate-100', 'text-slate-500');
+                        });
+                        
+                        const hpVal = parseInt(btn.dataset.hp);
+                        btn.classList.remove('border-transparent', 'bg-slate-100', 'text-slate-500');
+                        btn.classList.add('active', 'drop-shadow-sm');
+                        
+                        if (hpVal === 100) btn.classList.add('border-green-500', 'bg-green-50', 'text-green-700');
+                        else if (hpVal === 40) btn.classList.add('border-yellow-500', 'bg-yellow-50', 'text-yellow-700');
+                        else if (hpVal === 10) btn.classList.add('border-red-500', 'bg-red-50', 'text-red-700');
+                        else btn.classList.add('border-slate-800', 'bg-slate-800', 'text-white');
+                        
+                        this.handleInput('hpPercent', hpVal);
+                    });
+                });
                 this.ui.statusSelect.addEventListener('change', (e) => this.handleInput('status', e.target.value));
                 this.ui.pokemonLevel.addEventListener('input', (e) => this.handleInput('pokemonLevel', this.clampNumber(e.target.value, 1, 100)));
                 this.ui.badgesCount.addEventListener('change', (e) => this.handleInput('playerBadges', parseInt(e.target.value) || 0));
