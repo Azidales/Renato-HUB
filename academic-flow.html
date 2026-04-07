@@ -355,7 +355,7 @@
                 const isCancelled = Object.values(st).includes('cancelled');
                 const dayText = isCancelled ? `${d} <span class="text-[8px] absolute top-1.5 right-1.5 opacity-60">✖</span>` : d;
                 
-                cal.innerHTML += `<div role="button" tabindex="0" aria-label="Dia ${d}. ${has ? 'Possui aula.' : 'Sem aula.'}" onclick="window.showDay('${dk}', ${dw})" onkeydown="window.handleDayKeypress(event, '${dk}', ${dw})" class="day-card relative ${statusClass || baseClass} ${dk===todayKey?'today':''} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600">${dayText}</div>`;
+                cal.innerHTML += `<div role="button" tabindex="0" aria-label="Dia ${d}. ${has ? 'Possui aula.' : 'Sem aula.'}" onclick="window.showDay('${dk}', ${dw})" onkeydown="window.handleDayKeypress(event, '${dk}', ${dw})" class="day-card relative ${statusClass || 'bg-slate-50/50 text-slate-500 hover:bg-slate-100'} ${dk===todayKey?'today':''} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600">${dayText}</div>`;
             }
             lucide.createIcons();
             
